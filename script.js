@@ -6,10 +6,10 @@ teamTable = Array.from(teamTable.querySelectorAll('tr')).slice(3);
 
 let team = dataToObj([...managerTable, ...teamTable]);
 
-let Kelly = team.Kelly;
+let Bimala = team.Bimala;
 
 
-console.log(shiftLength(Kelly.mon));
+console.log(shiftLength(Bimala.sat));
 
 
 function dataToObj(trArr) {
@@ -37,5 +37,11 @@ function dataToObj(trArr) {
     function shiftLength(shiftTimesArr) {
         let [sh, sm] = shiftTimesArr[0].split(':').map(Number);
         let [eh, em] = shiftTimesArr[1].split(':').map(Number);
+        if (sh > eh) {
+            eh += 24;
+        }
+        if (sm > em) {
+            return `${eh - sh - 1}:${60 - sm}`;
+        }
         return `${eh - sh}:${em - sm}`;
     }
