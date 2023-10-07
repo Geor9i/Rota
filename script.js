@@ -1,47 +1,130 @@
-let mainTable = Array.from(document.querySelectorAll('table'));
-let [managerTable, teamTable] = [mainTable[40], mainTable[42]];
+let tableArr = Array.from(document.querySelectorAll('table'));
 
-managerTable = Array.from(managerTable.querySelectorAll('tr')).slice(3);
-teamTable = Array.from(teamTable.querySelectorAll('tr')).slice(3);
+class Rota {
+    constructor(tableArr) {
+        this.managerSchedule = {};
+        this.tmSchedule = {};
+        this.schedule = {};
+        this.extractTableData(tableArr);
+    }
 
-let team = dataToObj([...managerTable, ...teamTable]);
+    extractTableData(tableArr) {
+        let [managerSchedule, tmSchedule] = [tableArr[10], tableArr[12]];
+        managerSchedule = Array.from(managerSchedule.querySelectorAll('tr')).slice(3);
+        tmSchedule = Array.from(tmSchedule.querySelectorAll('tr')).slice(3);
+        this.managerSchedule = this.tableToScheduleObj((managerSchedule));
+        this.tmSchedule = this.tableToScheduleObj((tmSchedule));
+        this.schedule = this.tableToScheduleObj(([...managerSchedule, ...tmSchedule]));
+    }
 
-let Bimala = team.Bimala;
+    tableToScheduleObj(trArr) {
+        const shiftPattern = /\d{2}:\d{2}[\s-]{3}\d{2}:\d{2}/;
+        const weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            let schedule = {};
+            trArr.forEach(tr => {
+                let tdArr = Array.from(tr.querySelectorAll('td')).slice(0,8).map(td => td.textContent);
+                let name = tdArr[0].toLowerCase();
+                schedule[name] = weekdays.reduce((shifts, day, i) => {
+                    let data = tdArr[i + 1];
+                    let match;
+                    if((match = data.match(shiftPattern)) !== null) {
+                        shifts[day] = match[0].split(' - ');
+                    } else {
+                        shifts[day] = '';
+                    }
+                    return shifts;
+                }, {})
+            });
+            return schedule;
+        }
 
+        shiftLength(person, weekday) {
+            [person, weekday] = [person, weekday].map(str => str.toLowerCase());
+            if (!this.schedule[person] || !this.schedule[person][weekday]) return null;
 
-console.log(shiftLength(Bimala.sat));
+            let shiftArr = this.schedule[person][weekday];
+            let startTime = shiftArr[0];
+            let endTime = shiftArr[1];
+            //Add 24h to end time if the shift spans more than one day
+            let result = this.time().select(endTime).isBiggerThan(startTime)
+            console.log(result);
+        }
 
-
-function dataToObj(trArr) {
-    const shiftPattern = /\d{2}:\d{2}[\s-]{3}\d{2}:\d{2}/;
-    const guide = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-        let result = {};
-        trArr.forEach(tr => {
-            let tdArr = Array.from(tr.querySelectorAll('td')).slice(0,8).map(el => el.textContent);
-            result[tdArr[0]] = guide.reduce((obj, day, i) => {
-                let data = tdArr[i + 1];
-                let match;
-                if((match = data.match(shiftPattern)) !== null) {
-                    obj[day]= match[0]
-                    .split(' - ');
-                } else {
-                    obj[day] = '';
+        time () {
+            return {
+                difference(startTime, endTime) {
+                    return this.toMinutes(endTime) - this.toMinutes(startTime);
+                },
+                toMinutes(time) {
+                    let obj = this.toObj(time);
+                    return obj.h * 60 + obj.m;
+                },
+                select(time) {
+                    let that = this;
+                    return {
+                        isEq(compareTime) {
+                            let compare = that.toMinutes(compareTime);
+                            return that.toMinutes(time) === compare;
+                        },
+                        isBiggerThan(compareTime) {
+                            let compare = that.toMinutes(compareTime);
+                            return that.toMinutes(time) > compare;
+                        },
+                        isLessThan(compareTime) {
+                            let compare = that.toMinutes(compareTime);
+                            return that.toMinutes(time) < compare;
+                        }
+                    };
+                },
+                toObj(time) {
+                    let result = time.split(':').map(Number);
+                    return {
+                        h: result[0],
+                        m: result[1],
+                    }
                 }
-                return obj;
-            }, {})
-        });
-        return result;
-    }
+            }
+        }
+
+        weekDayShifts(weekday) {
+            weekday = weekday.toLowerCase();
+            let result = {};
+            for (let person in this.schedule) {
+                if (this.schedule[person][weekday]) {
+                    result[person] = this.schedule[person][weekday];
+                }
+            }
+            return result
+        }
+
+        getPersonHours(person) {
+            if (!this.schedule[person]) return null;
+                
+            let workHours = [];
+            for(let day in this.schedule[person]) {
+                if (this.schedule[person][day] !== '') {
+                    workHours.push(this.shiftLength(person, day));
+                }
+            }
+            return workHours;
+        }
+
+        wage(person) {
+            person = person.toLowerCase();
+            let hourlyPay = {
+                sr: 11.15,
+                tm: 10.65,
+            }
+            let pay = this.managerSchedule.hasOwnProperty(person)
+            ? hourlyPay.sr
+            : hourlyPay.tm;
+
+        }
+    
+}
 
 
-    function shiftLength(shiftTimesArr) {
-        let [sh, sm] = shiftTimesArr[0].split(':').map(Number);
-        let [eh, em] = shiftTimesArr[1].split(':').map(Number);
-        if (sh > eh) {
-            eh += 24;
-        }
-        if (sm > em) {
-            return `${eh - sh - 1}:${60 - sm}`;
-        }
-        return `${eh - sh}:${em - sm}`;
-    }
+const rota = new Rota(tableArr);
+
+// console.log(rota.getPersonHours('georgi'));
+console.log(rota.shiftLength('kelly', 'monday'));
