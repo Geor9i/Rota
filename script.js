@@ -284,7 +284,7 @@ class Rota {
                 let position = this.employee().getPosition(person); 
                 let pay = specialPay[person] ? specialPay[person]
                 : this.hourlyPay[position];
-                labour += this.wage(person, options);
+                labour += this.wage(person, {...options, pay});
             }
             return labour;
         }
@@ -296,8 +296,9 @@ class Rota {
             let weeklyPay = totalHours.h * pay + (totalHours.m / 60) * pay;
             if (options) {
                 if (options.net) {
-                return weeklyPay - weeklyPay * this.tax
-                }else if (options.month){
+               
+                    return weeklyPay - weeklyPay * this.tax;
+                } else if (options.month){
                     let monthly = (weeklyPay / 7) * 30;
                     return options.net ? monthly - (monthly * this.tax) : monthly;
     
@@ -306,9 +307,8 @@ class Rota {
                     return options.net ? yearly - (yearly * this.tax)
                     : yearly;
             }
-            } else {
-                return weeklyPay
-            }
+        }
+        return weeklyPay
         }
 }
 
