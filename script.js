@@ -306,7 +306,7 @@ class Rota {
                     : yearly;
             }
         }
-        return options.net ? weeklyPay - weeklyPay * this.tax : weeklyPay
+        return options?.net ? weeklyPay - weeklyPay * this.tax : weeklyPay
         }
 }
 
@@ -314,4 +314,4 @@ class Rota {
 const rota = new Rota(tableArr);
 
 // console.log(rota.wage('sean', {year:true, net:true}));
-console.log(rota.labour());
+console.log(rota.employee().get('georgi'));
