@@ -295,10 +295,8 @@ class Rota {
             let totalHours = this.personHours(person, {paid:true});
             let weeklyPay = totalHours.h * pay + (totalHours.m / 60) * pay;
             if (options) {
-                if (options.net) {
-               
-                    return weeklyPay - weeklyPay * this.tax;
-                } else if (options.month){
+                
+                if (options.month){
                     let monthly = (weeklyPay / 7) * 30;
                     return options.net ? monthly - (monthly * this.tax) : monthly;
     
@@ -308,7 +306,7 @@ class Rota {
                     : yearly;
             }
         }
-        return weeklyPay
+        return options.net ? weeklyPay - weeklyPay * this.tax : weeklyPay
         }
 }
 
