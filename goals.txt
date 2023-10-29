@@ -1,0 +1,54 @@
+                                                                                    ROTA
+
+                                                                A software that makes a weekly work schedule for a business!
+
+                                                                
+                                                                
+                                                                
+                                                                Desirability - A list of factors that make a shift desirable for both the shop and the employee
+
+
+                                                    
+
+
+
+
+
+
+
+
+
+                                                        Morning prep | Lunch Peak | Evening Peak Close
+
+
+
+
+                                                        APP Logic
+
+
+                        Rules
+
+                        Opening times 11:00 - 22:00
+
+                        1. Store must remain open!:
+                                - minimum staff requirement is 3!
+                                days open - ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                                
+
+                                for (weekday of week) {
+
+                                    (example) weekday = 'Monday' 
+                                    
+                                    4 Events allocated for Monday discovered
+
+                                    Event :{ 8 hours pre-open (time allocation event) required() }
+
+                                }
+
+
+
+
+                                                                THE ROTA FILTER
+
+
+                                                        270 + 300
