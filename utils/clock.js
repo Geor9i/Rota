@@ -57,7 +57,8 @@ export class Clock {
     };
   }
 
-  weekdayHourly(weekDayOpenTimes) {
+  weekdayHourly(weekDayOpenTimes, options = {}) {
+    let adjustForClock = false;
     let openTimes = this.time().toObj(weekDayOpenTimes);
     let [start, startMin] = openTimes.startTime.split(":");
     let [end, endMin] = openTimes.endTime.split(":");
@@ -65,10 +66,19 @@ export class Clock {
     let result = {};
     for (let i = start; i <= end; i++) {
       let lz = i < 10 ? "0" : "";
+      if (options.clock && i === 24) {
+        i = 0;
+        adjustForClock = true;
+        lz = i < 10 ? "0" : "";
+      }
       if (i === start || i === end) {
         result[`${lz}${i}:${i === start ? startMin : endMin}`] = {};
       } else {
         result[`${lz}${i}:00`] = {};
+      }
+
+      if (options.clock && i === 0 && adjustForClock) {
+        i = 24;
       }
     }
     return result;
@@ -77,40 +87,48 @@ export class Clock {
   time(time) {
     return {
       isEq: (compareTime) => {
-        let compare = this.time().toMinutes(compareTime);
-        return this.time().toMinutes(time) === compare;
+        let compare = this.time().toSeconds(compareTime);
+        return this.time().toSeconds(time) === compare;
       },
       isBiggerThan: (compareTime) => {
-        let compare = this.time().toMinutes(compareTime);
-        return this.time().toMinutes(time) > compare;
+        let compare = this.time().toSeconds(compareTime);
+        return this.time().toSeconds(time) > compare;
       },
       isLessThan: (compareTime) => {
-        let compare = this.time().toMinutes(compareTime);
-        return this.time().toMinutes(time) < compare;
+        let compare = this.time().toSeconds(compareTime);
+        return this.time().toSeconds(time) < compare;
       },
       isBiggerEqThan: (compareTime) => {
-        let compare = this.time().toMinutes(compareTime);
-        return this.time().toMinutes(time) >= compare;
+        let compare = this.time().toSeconds(compareTime);
+        return this.time().toSeconds(time) >= compare;
       },
       isLessEqThan: (compareTime) => {
-        let compare = this.time().toMinutes(compareTime);
-        return this.time().toMinutes(time) <= compare;
+        let compare = this.time().toSeconds(compareTime);
+        return this.time().toSeconds(time) <= compare;
       },
-      isWithin: (timeFrame, options) => {
-        let timeStart, timeEnd;
-        if (options.hour) {
-          [timeStart, timeEnd] = [time, time];
-        } else {
-          [timeStart, timeEnd] = time.split(" - ");
+      isWithin: (timeFrame) => {
+        let queryTime = {};
+        if (this.time().detect(time) === 'time') {
+          [queryTime.startTime, queryTime.endTime] = [time, time];
+        } else if (this.time().detect(time) === 'timeFrame') {
+          let queryFrame = this.time().toObj(time);
+          queryTime = {...queryFrame};
         }
-        let [timeFrameStart, timeFrameEnd] = timeFrame.split(" - ");
+        let {startTime: timeFrameStart, endTime: timeFrameEnd} = this.time().toObj(timeFrame);
         if (
-          this.time(timeFrameStart).isLessEqThan(timeStart) &&
-          this.time(timeFrameEnd).isBiggerEqThan(timeEnd)
+          this.time(timeFrameStart).isLessEqThan(queryTime.startTime) &&
+          this.time(timeFrameEnd).isBiggerEqThan(queryTime.endTime)
         ) {
           return true;
         }
         return false;
+      },
+      detect(time) {
+        if (time.includes(' - ') && time.length === 13) {
+          return 'timeFrame'
+        } else if (time.includes(':') && time.length === 5) {
+          return 'time'
+        }
       },
       timeSpanLength: (timeSpan) => {
         let isTimeSpan = this.validate(timeSpan);
@@ -125,6 +143,10 @@ export class Clock {
         let obj = this.time().toObj(time);
         return obj.h * 60 + obj.m;
       },
+      toSeconds: (time) => {
+        let obj = this.time().toObj(time);
+        return (obj.h * 60 * 60) + (obj.m * 60);
+      },
       toHours: (minutes) => {
         let hours = Math.trunc(Math.max(0, minutes / 60));
         return {
@@ -132,10 +154,29 @@ export class Clock {
           m: minutes - hours * 60,
         };
       },
-      toTime(timeObj) {
-        let lzH = timeObj.h < 10 ? "0" : "";
-        let lzM = timeObj.m < 10 ? "0" : "";
-        return `${lzH}${timeObj.h}:${lzM}${timeObj.m}`;
+      toThousands(time) {
+        return Number(time.replace(':', ''));
+      },
+      toTime(time, options = {}) {
+        if (options.fromMinutes) {
+          let h = Math.floor(time / 60);
+          let m = time - (h * 60);
+          let lzH = h < 10 ? "0" : "";
+          let lzM = m < 10 ? "0" : "";
+          return `${lzH}${h}:${lzM}${m}`;
+        }
+        if (typeof time === 'object') {
+          let lzH = time.h < 10 ? "0" : "";
+          let lzM = time.m < 10 ? "0" : "";
+          return `${lzH}${time.h}:${lzM}${time.m}`;
+        } else if (typeof time === 'number') {
+          let h = Math.floor(time / 100);
+          let m = time - (h * 100);
+          let lzH = h < 10 ? "0" : "";
+          let lzM = m < 10 ? "0" : "";
+          return `${lzH}${h}:${lzM}${m}`;
+        }
+       
       },
       breakLength: (shift) => {
         let minutes = this.shiftLength(shift[0], shift[1]);

@@ -52,3 +52,9 @@
 
 
                                                         270 + 300
+
+
+
+        after getting all events for all weekdays incorporate all into a timeline
+
+        

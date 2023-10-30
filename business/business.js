@@ -17,6 +17,7 @@ export class Business {
     this.events = {};
   }
 
+
   event(events) {
     return {
       add:() => {
@@ -151,6 +152,7 @@ export class Business {
           "availability",
           "daysOff",
           "minHours",
+          "lockSchedule"
         ];
         for (let attr of required) {
           if (!personData.hasOwnProperty(attr)) {
@@ -165,7 +167,7 @@ export class Business {
         );
         if (hasAdditional) {
           throw new Error(
-            `Person must have only: 'firstName', 'surname', 'positions', 'roleType', 'availability', 'daysOff', 'minHours' !`
+            `Person must have only: 'firstName', 'surname', 'positions', 'roleType', 'availability', 'daysOff', 'minHours', 'lockSchedule' !`
           );
         }
 
@@ -188,7 +190,7 @@ export class Business {
         if (!this.employee().validatePositions(positions)) {
           throw new Error("One or more positions not available!");
         }
-        if (isNaN(Number(daysOff))) {
+        if (isNaN(Number(daysOff)) && !daysOff.count) {
           throw new Error("Days off must be a number!");
         }
         if (isNaN(Number(minHours))) {

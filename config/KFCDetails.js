@@ -22,8 +22,12 @@ const staffList = {
     positions: ["ARGM"],
     roleType: "fullTime",
     availability: { "open - 16:00": ["m", "t", "w", "th", "f", "s", "su"] },
-    daysOff: 2,
+    daysOff: {
+      count: 2,
+      consecutive: true
+    },
     minHours: 36,
+    lockSchedule: true,
   },
   Rita: {
     firstName: "Rita",
@@ -31,8 +35,11 @@ const staffList = {
     positions: ["SR"],
     roleType: "fullTime",
     availability: { "12:00 - close": ["m", "t", "w", "th", "f", "su"] },
-    daysOff: 1,
+    daysOff: {
+      count: 1,
+    },
     minHours: 53,
+    lockSchedule: false,
   },
   Sean: {
     firstName: "Sean",
@@ -40,8 +47,12 @@ const staffList = {
     positions: ["SR"],
     roleType: "fullTime",
     availability: { "open - close": ["m", "t", "w", "th", "f", "s"] },
-    daysOff: 2,
+    daysOff: {
+      count: 2,
+      consecutive: false,
+    },
     minHours: 37,
+    lockSchedule: false,
   },
   Callum: {
     firstName: "Callum",
@@ -49,8 +60,12 @@ const staffList = {
     positions: ["RGM"],
     roleType: "fullTime",
     availability: storeWorkHoursSpan,
-    daysOff: 2,
+    daysOff: {
+      count: 2,
+      consecutive: false,
+    },
     minHours: 36,
+    lockSchedule: false,
   },
   Abdul: {
     firstName: "Abdul",
@@ -58,8 +73,12 @@ const staffList = {
     positions: ["BOH"],
     roleType: "fullTime",
     availability: { "09:00 - 17:00": ["t", "w", "th"] },
-    daysOff: 4,
+    daysOff: {
+      count: 4,
+      consecutive: false,
+    },
     minHours: 21,
+    lockSchedule: true,
   },
   Amy: {
     firstName: "Amy",
@@ -69,6 +88,7 @@ const staffList = {
     availability: { "15:00 - close": ["m", "t", "w", "th", "f", "s"] },
     daysOff: 2,
     minHours: 20,
+    lockSchedule: false,
   },
   Bimala: {
     firstName: "Bimala",
@@ -76,8 +96,11 @@ const staffList = {
     positions: ["FOH", "MOH"],
     roleType: "partTime",
     availability: { "open - 17:00": ["s"], "open - 20:00": ["su"] },
-    daysOff: 5,
+    daysOff: {
+      count: 5,
+    },
     minHours: 16,
+    lockSchedule: true,
   },
   Bruno: {
     firstName: "Bruno",
@@ -85,8 +108,12 @@ const staffList = {
     positions: ["MOH"],
     roleType: "fullTime",
     availability: { "16:30 - 21:45": ["m", "t", "w", "th", "s"] },
-    daysOff: 2,
+    daysOff: {
+      count: 2,
+      consecutive: false
+    },
     minHours: 25,
+    lockSchedule: true,
   },
   Ganga: {
     firstName: "Ganga",
@@ -94,8 +121,11 @@ const staffList = {
     positions: ["FOH", "MOH"],
     roleType: "fullTime",
     availability: { "open - close": ["m", "t", "w", "f", "s", "su"] },
-    daysOff: 1,
+    daysOff: {
+      count: 1,
+    },
     minHours: 42,
+    lockSchedule: false,
   },
   Hikmat: {
     firstName: "Hikmat",
@@ -105,6 +135,7 @@ const staffList = {
     availability: { "12:00 - close": ["m", "w", "th", "f", "s", "su"] },
     daysOff: 1,
     minHours: 45,
+    lockSchedule: false,
   },
   Kelly: {
     firstName: "Kelly",
@@ -114,6 +145,7 @@ const staffList = {
     availability: { "17:00 - 21:00": ["f", "s", "su"] },
     daysOff: 3,
     minHours: 18,
+    lockSchedule: true,
   },
   Layla: {
     firstName: "Layla",
@@ -123,6 +155,7 @@ const staffList = {
     availability: { "16:30 - 21:45": ["s", "su"] },
     daysOff: 4,
     minHours: 8,
+    lockSchedule: true,
   },
   Palraj: {
     firstName: "Palraj",
@@ -132,6 +165,7 @@ const staffList = {
     availability: storeWorkHoursSpan,
     daysOff: 2,
     minHours: 8,
+    lockSchedule: false,
   },
   Richard: {
     firstName: "Richard",
@@ -141,6 +175,7 @@ const staffList = {
     availability: storeWorkHoursSpan,
     daysOff: 2,
     minHours: 30,
+    lockSchedule: false,
   },
   Santosh: {
     firstName: "Santosh",
@@ -150,6 +185,7 @@ const staffList = {
     availability: { "open - close": ["m", "w", "th", "f", "s", "su"] },
     daysOff: 1,
     minHours: 45,
+    lockSchedule: false,
   },
   Sijan: {
     firstName: "Sijan",
@@ -158,7 +194,8 @@ const staffList = {
     roleType: "partTime",
     availability: { "open - 17:00": ["su"] },
     daysOff: 6,
-    minHours: 6,
+    minHours: 8,
+    lockSchedule: true,
   },
   Zivile: {
     firstName: "Zivile",
@@ -168,12 +205,13 @@ const staffList = {
     availability: { "09:15 - 14:00": ["m", "tu", "w", "th"] },
     daysOff: 2,
     minHours: 17,
+    lockSchedule: true,
   },
 };
 
 const events = {
   'cook': {
-    markerType: 'timeSpan',
+    markerType: 'timeFrame',
     times: storeWorkHoursSpan,
     positions: { 
       BOH: {
@@ -182,7 +220,7 @@ const events = {
     },
   },
   'cashier': {
-    markerType: 'timeSpan',
+    markerType: 'timeFrame',
     times: storeWorkHoursSpan,
     positions: { 
       FOH: {
@@ -191,7 +229,7 @@ const events = {
     },
   },
   'sr': {
-    markerType: 'timeSpan',
+    markerType: 'timeFrame',
     times: storeWorkHoursSpan,
     positions: { 
       SR: {
@@ -248,7 +286,7 @@ const events = {
     },
   },
   'delivery': {
-    markerType: 'timeSpan',
+    markerType: 'timeFrame',
     times: {
       "07:00 - 09:00": ["m", "w", "f"],
     },
@@ -258,17 +296,33 @@ const events = {
       } 
     },
   },
+  'admin': {
+    markerType: 'timeFrame',
+    times: {
+      "09:00 - 17:00": ["m"],
+    },
+    positions: { 
+      RGM: {
+        staff: 1,
+      } 
+    },
+  },
   'lunchPeak': {
-    markerType: 'timeSpan',
+    markerType: 'timeFrame',
     times: {
       "12:00 - 14:00": ["m", "t", "w", "th", "f"],
     },
     positions: { 
-     
+      FOH: {
+        staff:2
+      },
+      MOH: {
+        staff:2
+      }
     },
   },
   'eveningPeak': {
-    markerType: 'timeSpan',
+    markerType: 'timeFrame',
     times: {
       "17:00 - 21:00": ["m", "t", "w", "th", "f"],
     },
@@ -277,7 +331,7 @@ const events = {
     },
   },
   'weekendPeak': {
-    markerType: 'timeSpan',
+    markerType: 'timeFrame',
     times: {
       "12:00 - 20:00": ["s", "su"],
     },
