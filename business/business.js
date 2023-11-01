@@ -36,7 +36,7 @@ export class Business {
     let openingTimes = {};
     for (let time in timesObj) {
       let weekdaysArr = timesObj[time];
-      weekdaysArr = this.util.weekdays(weekdaysArr, { sort: true });
+      weekdaysArr = this.util.getWeekdays(weekdaysArr, { sort: true });
       weekdaysArr.forEach((weekday) => {
         if (!openingTimes.hasOwnProperty(weekday)) {
           openingTimes[weekday] = time;
@@ -82,16 +82,16 @@ export class Business {
     }
     return {
       add: (personData) => {
-        const p = this.employee().validate(personData);
-        const name = `${p.firstName} ${p.surname}`;
+        const validPerson = this.employee().validate(personData);
+        const fullName = `${validPerson.firstName} ${validPerson.surname}`;
 
-        let isManagement = p.positions.find(pos => this.positions.management.includes(pos));
+        let isManagement = validPerson.positions.find(pos => this.positions.management.includes(pos));
         if (isManagement) {
-            this.staff.management[name] = personData;
+            this.staff.management[fullName] = validPerson;
         } else {
-            this.staff.members[name] = personData;
+            this.staff.members[fullName] = validPerson;
         }
-        this.staff.list[name] = p;
+        this.staff.list[fullName] = validPerson;
       },
 
       addMany(staffList) {

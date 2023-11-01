@@ -1,13 +1,11 @@
-import { Clock } from "./clock.js";
 import { StringUtil } from "./stringUtil.js";
 
 export class Util {
   constructor() {
-    this.clock = new Clock();
     this.string = new StringUtil();
   }
  
-  weekdays(data, options) {
+  getWeekdays(data, options) {
     let variations = {
       monday: ["mon", "monday", "m", "mo", "1"],
       tuesday: ["tue", "tuesday", "tu", "t", "2"],
@@ -21,12 +19,12 @@ export class Util {
       if (options) {
         if (options.sort) {
           return data
-            .map((day) => this.weekdays(day))
+            .map((day) => this.getWeekdays(day))
             .filter((day, index, arr) => arr.indexOf(day) === index)
             .sort();
         }
         let remove = options.remove
-          ? options.remove.map((d) => this.weekdays(d))
+          ? options.remove.map((d) => this.getWeekdays(d))
           : [];
 
         return Object.keys(variations).filter((day) => {
@@ -35,7 +33,7 @@ export class Util {
       }
       return Object.keys(variations);
     } else if (typeof data === "object" && Object.keys(data).length === 0) {
-      return this.reduceToObj(this.weekdays([]), {});
+      return this.reduceToObj(this.getWeekdays([]), {});
     }
 
     let string = data.toLowerCase();
