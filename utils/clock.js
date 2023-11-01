@@ -27,18 +27,18 @@ export class Clock {
         return `${resultSign}${lz(h)}${h}:${lz(m)}${m}`;
       },
       calcClockTime: (time, modTime, sign = "+") => {
-        sign = sign === "+" ? 1 : -1;
+        sign = sign === "-" || sign === -1 ? -1 : 1;
         let clockHours = this.time().toObj(time);
         let modHours = this.time().toObj(modTime);
         let dayCount = Math.floor(modHours.h / 24);
         let minToHour = Math.floor(modHours.m / 60);
         modHours.m = modHours.m - minToHour * 60;
-        clockHours.h += modHours.h + minToHour * sign;
+        clockHours.h += (modHours.h + minToHour) * sign;
         clockHours.h =
           clockHours.h < 0 || clockHours.h > 24
             ? clockHours.h + 24 * Math.max(dayCount, 1) * -1
             : clockHours.h;
-        clockHours.m = clockHours.m + modHours.m * sign;
+        clockHours.m = clockHours.m + (modHours.m * sign);
         if (clockHours.m < 0) {
           clockHours.m += 60;
           clockHours.h =
@@ -223,11 +223,11 @@ export class Clock {
     let backwardTime = { ...orgTime };
     for (let i = orgIndex; i >= 0; i--) {
       timeSpread.splice(i, 1, { ...backwardTime });
-      backwardTime = this.calc(backwardTime, "-01:00");
+      backwardTime = this.math().calcClockTime(backwardTime, "-01:00");
     }
     for (let i = orgIndex; i <= 12; i++) {
       timeSpread.splice(i, 1, { ...forwardTime });
-      forwardTime = this.calc(forwardTime, "01:00");
+      forwardTime = this.math().calcClockTime(forwardTime, "01:00");
     }
     return {
       isBiggerThan: (compareTime) => {

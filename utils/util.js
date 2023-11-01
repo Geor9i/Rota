@@ -94,7 +94,18 @@ export class Util {
 
   reduceToObj(arr, data) {
     return arr.reduce((acc, curr) => {
-      acc[curr] = data;
+      let dataType = this.typeof(data);
+        switch(dataType) {
+          case 'array':
+            acc[curr] = [...data];
+          break;
+          case 'object':
+            acc[curr] = {...data};
+          break;
+          default:
+            acc[curr] = data;
+          break;
+        }
       return acc;
     }, {});
   }

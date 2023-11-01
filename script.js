@@ -12,6 +12,7 @@ KFC.event(events).add();
 
 //Rota
 const rota = new Rota(KFC);
+console.log(rota);
 rota.create('24/10/23')
 
 
