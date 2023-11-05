@@ -51,10 +51,35 @@
                                                                 THE ROTA FILTER
 
 
-                                                        270 + 300
+
+Scoring options: [
+        1: Strict,
+        2: Intended,
+        3: Optional
+]
+
+Module shift manager
+
+module evaluator
 
 
+Shift Manager  creates a new Shift which is an instance of a Shift class 
 
-        after getting all events for all weekdays incorporate all into a timeline
+shift manager tries to put a shift based on initially calculated demands based on scoring options. 
+Always fulfils the strict options first and moves on to the rest. If the strict options cannot be completed it stores the shift in a lastCaseScenarion array where first of all the shift can be index t ensure it doesn't repeat and also if no optimal scenario is found can be taken and reintroduced to the rota show the best possible scenario regardless of not have met the demands.
 
-        
+Evaluator works closely with shift manager and ensures that for each change made the shift manager is informed of the score. The idea here is to be able to track each step in relation to all other shift potential and ensure that at least all other employee's strict demands are still able to be met + all shop strict demands
+
+if a step in shift manager is found to have a irreparable impact on the rest of the rota it is reverted and attempted again from a different angle. 
+Example:
+
+A shift starts from 12:00 to 18:00  the shift manger attempts to increase the shift by one hour to become '12:00 - 19:00'. The evaluator discovers that this change breaches a the shops requirements for employees at that time. So evaluator sends a message saying employee's shift cannot extend past 19:00. The shift now gets stored in the lastCaseScenario array and the shift manager attempts to change its initial point by changing the time to '11:00 - 18:00' since this change creates no evaluator alrets it is kept a nd the program continues
+
+All these shift can be kept in a static array of the shift class if a shift is later discovered to have a lower score then another it can be undone
+
+
+so the algorithm will be able to score a shift relative to all other shifts, where it will check if all other shift's strict demands can still be met. if that is true then the shift can be kept in an approvedFor StrictArray and modified to achieve maximum efficiency and staff satisfaction based on already implemented scoring per option. so this shift generation process will always create a score per shift and later if there a re any overlapping shift they can be evaluated based on score and later scaped 
+
+
+shift must have score
+employee total shifts must also have a score 

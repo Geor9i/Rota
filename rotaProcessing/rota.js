@@ -1,30 +1,30 @@
-import { LegalRequirements } from "../legal/legalRequirements.js";
 import { Util } from "../utils/util.js";
 import { Clock } from "../utils/clock.js";
+import { Evaluator } from "./evaluator.js";
 
 export class Rota {
   constructor(business) {
-    this.legal = new LegalRequirements();
     this.util = new Util();
     this.clock = new Clock();
     this.positions = business.positions;
     this.businessName = business.name;
     this.staff = business.staff;
+    this.evaluator = new Evaluator(this.staff);
     this.events = business.events;
     this.dayFrame = this.util.getWeekdays({});
     this.openTimes = business.workHours;
     this.hourlyAvailability = {};
   }
 
-  create(date) {
+  create(date, labourHours) {
     date = this.util.date(date).getMonday();
     this.openTimes = this.util.iterate(
       this.openTimes,
       this.clock.time().toObj
     );
     const [rota, staffAvailability] = this.init();
-    console.log(rota);
-    console.log(staffAvailability);
+    this.evaluator.report(rota);
+    // console.log(staffAvailability);
   }
 
   init() {
@@ -47,7 +47,7 @@ export class Rota {
 
     for (let entry in this.events) {
       const event = this.events[entry];
-
+      const globalStrict = event.priority && event.priority === 'strict' ? true : false;
       if (event.times[weekday]) {
         if (event.markerType === "timeFrame") {
           let timeFrame = this.fillOpenCloseTimes(
@@ -78,7 +78,11 @@ export class Rota {
           );
           let sign = event.markerType === "completeAfter" ? 1 : -1;
           for (let position in event.positions) {
-            let timeLength = event.positions[position].hours;
+            let [timeLength, isStrict] = this.util.isStrict(event.positions[position]);
+            let priorityAssign = isStrict === true || (isStrict === null && globalStrict);
+            if (!priorityAssign) {
+              continue;
+            }
             let calcTime = this.clock
               .math()
               .calcClockTime(startTime, timeLength, sign);
@@ -104,7 +108,7 @@ export class Rota {
     return openTimes;
   }
 
-  dailyLabour(weekday) {
+  baseDailyLabour(weekday) {
     let positionTotalHours = this.util.iterate(
       this.positions.all,
       this.util.string.toUpperCase
@@ -114,12 +118,15 @@ export class Rota {
 
     for (let entry in this.events) {
       const event = this.events[entry];
+      const globalStrict = event.priority && event.priority === 'strict' ? true : false;
 
       if (event.times[weekday] && event.markerType === "timeFrame") {
         let timeSpan = this.fillOpenCloseTimes(event.times[weekday], weekday);
         let timeLength = this.clock.time().timeSpanLength(timeSpan);
         for (let position in event.positions) {
-          let staffCount = event.positions[position].staff;
+          let [staffCount, isStrict] = this.util.isStrict(event.positions[position].staff);
+          let priorityAssign = isStrict === true || (isStrict === null && globalStrict);
+          staffCount = priorityAssign ? staffCount : 1;
           let totalHours = this.clock
             .math()
             .multiplyNormal(timeLength, staffCount);
@@ -132,14 +139,13 @@ export class Rota {
         event.times[weekday]
       ) {
         for (let position in event.positions) {
-          let staffCount = event.positions[position].staff;
-          let timeLength = event.positions[position].hours;
-          let totalHours = this.clock
-            .math()
-            .multiplyNormal(timeLength, staffCount);
-          positionTotalHours[position] = this.clock
-            .math()
-            .add(positionTotalHours[position], totalHours);
+          let [hours, isStrict] = event.positions[position];
+            let priorityAssign = isStrict === true || (isStrict === null && globalStrict);
+            if (priorityAssign) {
+              positionTotalHours[position] = this.clock
+              .math()
+              .add(positionTotalHours[position], hours);
+            }
         }
       }
     }
@@ -151,11 +157,12 @@ export class Rota {
     return positionTotalHours;
   }
 
-  labourTimeline(weekday) {
+  baseLabourTimeline(weekday) {
     let timeline = {};
 
     for (let entry in this.events) {
       const event = this.events[entry];
+      const globalStrict = event.priority && event.priority === 'strict' ? true : false;
 
       if (event.times[weekday]) {
         if (event.markerType === "timeFrame") {
@@ -164,7 +171,9 @@ export class Rota {
             weekday
           );
           for (let position in event.positions) {
-            let staffCount = event.positions[position].staff;
+            let [staffCount, isStrict] = this.util.isStrict(event.positions[position].staff);
+            let priorityAssign = isStrict === true || (isStrict === null && globalStrict);
+            staffCount = priorityAssign ? staffCount : 1;
             if (!timeline.hasOwnProperty(position)) {
               timeline[position] = {};
             }
@@ -180,14 +189,16 @@ export class Rota {
               event.times[weekday],
               weekday
             );
-            let staffCount = event.positions[position].staff;
-            let timeLength = event.positions[position].hours;
+            let [timeLength, isStrict] = this.util.isStrict(event.positions[position]);
+            let priorityAssign = isStrict === true || (isStrict === null && globalStrict);
+            if (!priorityAssign) {
+              continue;
+            }
             if (!timeline.hasOwnProperty(position)) {
               timeline[position] = {};
             }
             if (!timeline[position].hasOwnProperty(eventTime)) {
               timeline[position][eventTime] = {
-                staffCount,
                 timeLength,
                 markerType: event.markerType,
               };
@@ -273,6 +284,7 @@ export class Rota {
   }
   //? Replace open/close with actual store times
   fillOpenCloseTimes(timeSpan, weekday, totalHours = false) {
+    timeSpan = typeof timeSpan === 'object' ? timeSpan.value : timeSpan;
     let labourHours = totalHours ? this.dayFrame : this.openTimes;
     if (timeSpan.includes(" - ")) {
       let [startShift, endShift] = timeSpan.split(" - ");

@@ -4,9 +4,9 @@ export class Util {
   constructor() {
     this.string = new StringUtil();
   }
- 
-  getWeekdays(data, options) {
-    let variations = {
+
+  getWeekdays(data, options = {}) {
+    let syntaxVariations = {
       monday: ["mon", "monday", "m", "mo", "1"],
       tuesday: ["tue", "tuesday", "tu", "t", "2"],
       wednesday: ["wed", "wednesday", "we", "w", "3"],
@@ -16,30 +16,24 @@ export class Util {
       sunday: ["sun", "sunday", "su", "7"],
     };
     if (Array.isArray(data)) {
-      if (options) {
-        if (options.sort) {
-          return data
-            .map((day) => this.getWeekdays(day))
-            .filter((day, index, arr) => arr.indexOf(day) === index)
-            .sort();
-        }
-        let remove = options.remove
-          ? options.remove.map((d) => this.getWeekdays(d))
-          : [];
-
-        return Object.keys(variations).filter((day) => {
-          return remove.includes(day) ? false : true;
-        });
+      let remove = options.remove
+        ? options.remove.map((d) => this.getWeekdays(d))
+        : [];
+      if (options.sort) {
+        return data
+          .map((day) => this.getWeekdays(day))
+          .filter((day, index, arr) => arr.indexOf(day) === index)
+          .filter((day) => (remove.includes(day) ? false : true));
       }
-      return Object.keys(variations);
+      return Object.keys(syntaxVariations);
     } else if (typeof data === "object" && Object.keys(data).length === 0) {
       return this.reduceToObj(this.getWeekdays([]), {});
     }
 
     let string = data.toLowerCase();
 
-    for (let day in variations) {
-      if (variations[day].includes(string)) {
+    for (let day in syntaxVariations) {
+      if (syntaxVariations[day].includes(string)) {
         return day;
       }
     }
@@ -93,17 +87,17 @@ export class Util {
   reduceToObj(arr, data) {
     return arr.reduce((acc, curr) => {
       let dataType = this.typeof(data);
-        switch(dataType) {
-          case 'array':
-            acc[curr] = [...data];
+      switch (dataType) {
+        case "array":
+          acc[curr] = [...data];
           break;
-          case 'object':
-            acc[curr] = {...data};
+        case "object":
+          acc[curr] = { ...data };
           break;
-          default:
-            acc[curr] = data;
+        default:
+          acc[curr] = data;
           break;
-        }
+      }
       return acc;
     }, {});
   }
@@ -179,5 +173,60 @@ export class Util {
         return date;
       },
     };
+  }
+
+  updateConfig(data, callback, ...params) {
+    let dataType = this.typeof(data);
+    if (["string", "number", "boolean"].includes(dataType)) {
+      return callback(data, ...params);
+    }
+    if (dataType === "object") {
+      let result = {};
+      for (let entry in data) {
+        let isConfig =
+          data[entry].hasOwnProperty("value") &&
+          data[entry].hasOwnProperty("priority");
+        params.push(entry);
+        if (isConfig) {
+          let { priority, value } = data[entry];
+          value = callback(value, ...params);
+          for (let day in value) {
+            value[day] = {
+              value: value[day],
+              priority: priority,
+            };
+          }
+          result = { ...result, ...value };
+        } else {
+          result = { ...result, ...callback(data[entry], ...params) };
+        }
+      }
+      return result;
+    }
+    return null;
+  }
+  isStrict(data) {
+    let dataType = this.typeof(data);
+    if (dataType === "object") {
+      let isConfig =
+        data.hasOwnProperty("value") && data.hasOwnProperty("priority");
+      if (isConfig) {
+        return data.priority === "strict"
+          ? [data.value, true]
+          : [data.value, false];
+      } else {
+        return [data.value, null];
+      }
+    }
+    return [data, null];
+  }
+
+  getValueAndPriority(targetObject, valueName) {
+    let globalPriority = targetObject.priority ? targetObject.priority : null;
+    let targetValue = targetObject[valueName];
+    let hasPriority = targetValue.priority && targetValue.value ? true : false;
+    return hasPriority
+      ? [targetValue.value, targetValue.priority]
+      : [targetValue, globalPriority];
   }
 }

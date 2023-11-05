@@ -15,8 +15,10 @@ export class LegalRequirements{
         this.weeklyHours = {
             min: '08:00',
             max: {
-                'partTime': '20:00',
-                'fullTime': '60:00'
+                'student': '20:00',
+                'partTime': '35:00',
+                'fullTime': '48:00',
+                'overtime': '60:00',
             }
         }
     }

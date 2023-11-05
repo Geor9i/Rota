@@ -10,9 +10,9 @@ KFC.workHours = KFC.workDaysAndTimes(workingHours);
 KFC.employee().addMany(staffList)
 KFC.event(events).add();
 
-//Rota
+Rota
 const rota = new Rota(KFC);
 console.log(rota);
-rota.create('24/10/23')
+rota.create('24/10/23', 503)
 
 

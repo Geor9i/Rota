@@ -9,42 +9,46 @@ export class Business {
       management: [],
       all: [],
     };
-    this.staff = {
-        list: {},
-        members: {},
-        management: {},
-    },
-    this.events = {};
+    (this.staff = {
+      list: {},
+      members: {},
+      management: {},
+    }),
+      (this.events = {});
   }
-
 
   event(events) {
     return {
-      add:() => {
+      add: () => {
         let eventNames = Object.keys(events);
-        eventNames.forEach(name => {
-          if(!this.events.hasOwnProperty(name)) {
-            this.events[name] = events[name];
-            this.events[name].times = this.workDaysAndTimes(events[name].times)
+        eventNames.forEach((name) => {
+          if (!this.events.hasOwnProperty(name)) {
+            this.events[name] = { ...events[name] };
+            this.events[name].times = this.util.updateConfig(events[name].times, this.workDaysAndTimes.bind(this));
           }
-        })
-      }
-    }
+        });
+      },
+    };
   }
 
-  workDaysAndTimes(timesObj) {
+  workDaysAndTimes(weekdayData, timeFrame = null) {
+    if (Array.isArray(weekdayData) && timeFrame) {
+      let result = this.util.getWeekdays(weekdayData, { sort: true });
+      return this.workDaysAndTimes({ [timeFrame]: result });
+    }
+
     let openingTimes = {};
-    for (let time in timesObj) {
-      let weekdaysArr = timesObj[time];
+    for (let time in weekdayData) {
+      let weekdaysArr = weekdayData[time];
       weekdaysArr = this.util.getWeekdays(weekdaysArr, { sort: true });
       weekdaysArr.forEach((weekday) => {
         if (!openingTimes.hasOwnProperty(weekday)) {
           openingTimes[weekday] = time;
         } else if (openingTimes.hasOwnProperty(weekday)) {
-            if(!Array.isArray(openingTimes[weekday])) {
-              openingTimes[weekday] = [openingTimes[weekday]]
-            }
-          openingTimes[weekday].push(time)
+          if (!Array.isArray(openingTimes[weekday])) {
+            openingTimes[weekday] = [openingTimes[weekday]];
+          }
+          openingTimes[weekday].push(time);
         }
       });
     }
@@ -61,8 +65,9 @@ export class Business {
           } else {
             this.positions.management = [...this.positions.all];
 
-            this.positions.management = this.util
-            .string.format(this.positions.management);
+            this.positions.management = this.util.string.format(
+              this.positions.management
+            );
 
             this.positions.all.push(...hierarchy[pos]);
 
@@ -82,16 +87,20 @@ export class Business {
     }
     return {
       add: (personData) => {
-        const validPerson = this.employee().validate(personData);
-        const fullName = `${validPerson.firstName} ${validPerson.surname}`;
+        let person = { ...personData };
+        this.employee().validate(personData);
+        person = this.employee().populateEmployeeDetails(person);
+        const fullName = `${person.firstName} ${person.surname}`;
 
-        let isManagement = validPerson.positions.find(pos => this.positions.management.includes(pos));
+        let isManagement = person.positions.find((pos) =>
+          this.positions.management.includes(pos)
+        );
         if (isManagement) {
-            this.staff.management[fullName] = validPerson;
+          this.staff.management[fullName] = person;
         } else {
-            this.staff.members[fullName] = validPerson;
+          this.staff.members[fullName] = person;
         }
-        this.staff.list[fullName] = validPerson;
+        this.staff.list[fullName] = person;
       },
 
       addMany(staffList) {
@@ -99,6 +108,24 @@ export class Business {
           this.add(staffList[person]);
         }
       },
+
+      populateEmployeeDetails: (employee) => {
+        let person = { ...employee };
+        if (person.firstName === "Sean") {
+          // debugger
+        }
+        person.firstName = this.util.string.format(person.firstName);
+        person.surname = this.util.string.format(person.surname);
+        person.positions = this.util.string.format(person.positions);
+        person.contractType = this.util.string.format(person.contractType);
+        person.availability = this.util.updateConfig(
+          person.availability,
+          this.workDaysAndTimes.bind(this)
+        );
+
+        return person;
+      },
+
       remove: (name) => {
         let employee = this.employee().findByName(name, { asString: true });
         delete this.staff.list[employee];
@@ -134,91 +161,52 @@ export class Business {
       },
 
       validate: (personData) => {
-        let {
-          firstName,
-          surname,
-          positions,
-          roleType,
-          availability,
-          daysOff,
-          minHours,
-        } = personData;
+        let person = { ...personData };
 
         let required = [
           "firstName",
           "surname",
           "positions",
-          "roleType",
+          "contractType",
           "availability",
-          "daysOff",
-          "minHours",
-          "lockSchedule"
         ];
         for (let attr of required) {
-          if (!personData.hasOwnProperty(attr)) {
+          if (!person.hasOwnProperty(attr)) {
             throw new Error(
-              `Person must have: firstName, surname, positions, roleType, availability`
+              `Person must have: firstName, surname, positions, contractType, availability`
             );
           }
         }
-
-        let hasAdditional = Object.keys(personData).find(
-          (x) => !required.includes(x)
-        );
-        if (hasAdditional) {
-          throw new Error(
-            `Person must have only: 'firstName', 'surname', 'positions', 'roleType', 'availability', 'daysOff', 'minHours', 'lockSchedule' !`
-          );
-        }
-
-        if (!Array.isArray(positions)) {
+        if (!Array.isArray(person.positions)) {
           throw new Error("Positions must be an array!");
         }
-        if (!typeof availability === "object") {
-          throw new Error("availability must be an object!");
-        }
-        availability = this.workDaysAndTimes(availability);
-        roleType = this.util.string.format(roleType);
         if (
-          !roleType.includes("part") &&
-          !roleType.includes("full") &&
-          !roleType.includes("student")
+          !["parttime", "fulltime", "student", "overtime"].includes(
+            person.contractType.toLowerCase()
+          )
         ) {
-          throw new Error("Enter fullTime/partTime/student roleType!");
+          throw new Error(
+            "Enter fullTime/partTime/student/overtime contractType!"
+          );
         }
-        positions = this.util.string.format(positions);
-        if (!this.employee().validatePositions(positions)) {
+        if (!this.employee().validatePositions(person.positions)) {
           throw new Error("One or more positions not available!");
         }
-        if (isNaN(Number(daysOff)) && !daysOff.count) {
-          throw new Error("Days off must be a number!");
-        }
-        if (isNaN(Number(minHours))) {
-          throw new Error("Minimum hours must be a number!");
-        }
-
-        firstName = this.util.string.format(firstName);
-        surname = this.util.string.format(surname);
-        if (this.staff.list.hasOwnProperty(`${firstName} ${surname}`)) {
+        if (
+          this.staff.list.hasOwnProperty(
+            `${person.firstName.toLowerCase()} ${person.surname.toLowerCase()}`
+          )
+        ) {
           throw new Error("Employee with the same name is employed");
         }
-
-        return {
-          firstName,
-          surname,
-          positions,
-          roleType,
-          availability,
-          daysOff,
-          minHours,
-        };
+        return true;
       },
 
       validatePositions: (positions) => {
         positions = this.util.string.format(positions);
-        let isValid = positions.filter((pos) => {
-          return this.positions.all.find((x) => x === pos) ? true : false;
-        });
+        let isValid = positions.filter((pos) =>
+          this.positions.all.find((x) => x === pos) ? true : false
+        );
         return isValid ? true : false;
       },
     };
