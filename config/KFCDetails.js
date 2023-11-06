@@ -22,12 +22,9 @@ const staffList = {
     positions: ["ARGM"],
     contractType: "fullTime",
     availability: {
-      "open - 16:00": {
-        value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: "strict",
-      },
+      "open - 16:00": { strict: ["m", "t", "w", "th", "f", "s", "su"] },
     },
-    daysOff: { strict: 2 },
+    daysOffAmount: { strict: 2 },
     consecutive: { strict: true },
     minHours: { strict: "36:00" },
   },
@@ -37,11 +34,10 @@ const staffList = {
     positions: ["SR"],
     contractType: "fullTime",
     availability: {
-      "14:00 - close": {
-        value: ["m", "t", "w", "th", "f", "su"],
-        priority: "important",
-      },
+      "14:00 - close": { important: ["m", "t", "w", "th", "f", "su"] },
+      "12:00 - close": { strict: ["m", "t", "w", "th", "f", "su"] },
     },
+    daysOff: ["s"],
     minHours: { strict: "53:00" },
   },
   Sean: {
@@ -50,12 +46,10 @@ const staffList = {
     positions: ["SR"],
     contractType: "fullTime",
     availability: {
-      "open - close": {
-        value: ["m", "t", "w", "th", "f", "s"],
-        priority: "optional",
-      },
+      "open - close": { optional: ["m", "t", "w", "th", "f", "s"] },
     },
-    daysOff: 2,
+    daysOffAmount: 2,
+    daysOff: ["su"],
     consecutive: { optional: false },
     minHours: { strict: "37:00" },
     priority: "important",
@@ -66,7 +60,7 @@ const staffList = {
     positions: ["RGM"],
     contractType: "fullTime",
     availability: storeWorkHoursSpan,
-    daysOff: {
+    daysOffAmount: {
       amount: 2,
       consecutive: { optional: false },
     },
@@ -79,10 +73,7 @@ const staffList = {
     positions: ["BOH"],
     contractType: "fullTime",
     availability: {
-      "09:00 - 17:00": {
-        value: ["t", "w", "th"],
-        priority: "strict",
-      },
+      "09:00 - 17:00": { strict: ["t", "w", "th"] },
     },
     minHours: { strict: "21:00" },
   },
@@ -91,10 +82,8 @@ const staffList = {
     surname: "Bowden",
     positions: ["FOH", "MOH"],
     contractType: "fullTime",
-    availability: {
-      "15:00 - close": ["m", "t", "w", "th", "f", "s"],
-    },
-    daysOff: 2,
+    availability: { "15:00 - close": ["m", "t", "w", "th", "f", "s"] },
+    daysOffAmount: 2,
     minHours: { important: "20:00" },
     priority: "optional",
   },
@@ -105,7 +94,7 @@ const staffList = {
     contractType: "partTime",
     availability: {
       "open - 17:00": ["s"],
-      "open - 20:00": ["su"]
+      "open - 20:00": ["su"],
     },
     priority: "strict",
   },
@@ -115,12 +104,9 @@ const staffList = {
     positions: ["MOH"],
     contractType: "fullTime",
     availability: {
-      "16:30 - 21:45": {
-        value: ["m", "t", "w", "th", "s"],
-        priority: "important",
-      },
+      "16:30 - 21:45": { important: ["m", "t", "w", "th", "s"] },
     },
-    daysOff: 2,
+    daysOffAmount: 2,
     consecutive: false,
     minHours: "25:00",
     priority: "important",
@@ -140,7 +126,7 @@ const staffList = {
     positions: ["BOH"],
     contractType: "fullTime",
     availability: { "12:00 - close": ["m", "w", "th", "f", "s", "su"] },
-    daysOff: 1,
+    daysOffAmount: 1,
     minHours: "45:00",
     priority: "strict",
   },
@@ -169,7 +155,7 @@ const staffList = {
     positions: ["FOH"],
     contractType: "partTime",
     availability: storeWorkHoursSpan,
-    daysOff: 2,
+    daysOffAmount: 2,
     priority: "optional",
   },
   Richard: {
@@ -187,16 +173,11 @@ const staffList = {
     positions: ["BOH"],
     contractType: "overtime",
     availability: {
-      "open - 21:00": {
-        value: ["m", "w", "th", "f", "s", "su"],
-        priority: "important",
-      },
-      "open - close": {
-        value: ["m", "w", "th", "f", "s", "su"],
-        priority: "optional",
-      },
+      "open - 21:00": { important: ["m", "w", "th", "f", "s", "su"] },
+      "open - close": { optional: ["m", "w", "th", "f", "s", "su"] },
     },
     minHours: "45:00",
+    daysOff: ["tu"],
     priority: "important",
   },
   Sijan: {
@@ -213,10 +194,7 @@ const staffList = {
     positions: ["FOH", "MOH"],
     contractType: "partTime",
     availability: {
-      "09:15 - 14:00": {
-        value: ["m", "tu", "w", "th"],
-        priority: "strict",
-      },
+      "09:15 - 14:00": { strict: ["m", "tu", "w", "th"] },
     },
     minHours: { strict: "17:00" },
   },
@@ -226,10 +204,7 @@ const events = {
   cook: {
     markerType: "timeFrame",
     times: {
-      "open - close": {
-        value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: "strict",
-      },
+      "open - close": { strict: ["m", "t", "w", "th", "f", "s", "su"] },
     },
     positions: {
       BOH: { optional: 2 },
@@ -238,10 +213,7 @@ const events = {
   cashier: {
     markerType: "timeFrame",
     times: {
-      "open - close": {
-        value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: "strict",
-      },
+      "open - close": { strict: ["m", "t", "w", "th", "f", "s", "su"] },
     },
     positions: {
       FOH: { optional: 2 },
@@ -250,10 +222,7 @@ const events = {
   sr: {
     markerType: "timeFrame",
     times: {
-      "open - close": {
-        value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: "strict",
-      },
+      "open - close": { strict: ["m", "t", "w", "th", "f", "s", "su"] },
     },
     positions: {
       SR: { optional: 2 },
@@ -262,10 +231,7 @@ const events = {
   open: {
     markerType: "completeBefore",
     times: {
-      open: {
-        value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: "strict",
-      },
+      open: { strict: ["m", "t", "w", "th", "f", "s", "su"] },
     },
     positions: {
       SR: "01:00",
@@ -278,10 +244,7 @@ const events = {
   close: {
     markerType: "completeAfter",
     times: {
-      close: {
-        value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: "strict",
-      },
+      close: { strict: ["m", "t", "w", "th", "f", "s", "su"] },
     },
     positions: {
       SR: "00:30",
@@ -294,10 +257,7 @@ const events = {
   delivery: {
     markerType: "timeFrame",
     times: {
-      "07:00 - 09:00": {
-        value: ["m", "w", "f"],
-        priority: "strict",
-      },
+      "07:00 - 09:00": { strict: ["m", "w", "f"] },
     },
     positions: {
       all: 2,
@@ -308,10 +268,7 @@ const events = {
     priority: "strict",
     markerType: "timeFrame",
     times: {
-      "09:00 - 17:00": {
-        value: ["m"],
-        priority: "important",
-      },
+      "09:00 - 17:00": { important: ["m"] },
     },
     positions: {
       RGM: 1,

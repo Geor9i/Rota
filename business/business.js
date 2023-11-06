@@ -24,7 +24,7 @@ export class Business {
         eventNames.forEach((name) => {
           if (!this.events.hasOwnProperty(name)) {
             this.events[name] = { ...events[name] };
-            this.events[name].times = this.util.updateConfig(events[name].times, this.workDaysAndTimes.bind(this));
+            this.events[name].times = this.util.setConfig(events[name].times, this.workDaysAndTimes.bind(this));
           }
         });
       },
@@ -117,7 +117,7 @@ export class Business {
         person.surname = this.util.string.format(person.surname);
         person.positions = this.util.string.format(person.positions);
         person.contractType = this.util.string.format(person.contractType);
-        person.availability = this.util.updateConfig(
+        person.availability = this.util.setConfig(
           person.availability,
           this.workDaysAndTimes.bind(this)
         );

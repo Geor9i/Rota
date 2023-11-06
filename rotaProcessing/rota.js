@@ -20,6 +20,7 @@ export class Rota {
     date = this.util.date(date).getMonday();
     this.openTimes = this.util.iterate(this.openTimes, this.clock.time().toObj);
     const [rota, staffAvailability] = this.init();
+    console.log(this.dayFrame)
     // this.evaluator.report(rota);
     console.log(staffAvailability);
   }
@@ -29,7 +30,7 @@ export class Rota {
     const rota = this.util.getWeekdays({});
     const staffAvailability = { ...rota };
     for (let weekday in rota) {
-      this.dayFrame[weekday] = this.potentialDayLength(weekday);
+      this.dayFrame[weekday] = this.strictWorkHours(weekday);
       staffAvailability[weekday] = this.getWeeklyAvailability(weekday);
       let staff = { ...this.staff.list };
 
@@ -40,17 +41,17 @@ export class Rota {
     return [rota, staffAvailability];
   }
 
-  potentialDayLength(weekday) {
+  strictWorkHours(weekday) {
     let openTimes = this.clock.time().toObj(this.openTimes[weekday]);
 
     for (let entry in this.events) {
       const event = this.events[entry];
       const globalStrict =
         event.priority && event.priority === "strict" ? true : false;
-      if (event.times[weekday]) {
+      if (event.times.strict[weekday]) {
         if (event.markerType === "timeFrame") {
           let timeFrame = this.fillOpenCloseTimes(
-            event.times[weekday],
+            event.times.strict[weekday],
             weekday
           );
           timeFrame = this.clock.time().toObj(timeFrame);
@@ -71,35 +72,38 @@ export class Rota {
         } else if (
           ["completeBefore", "completeAfter"].includes(event.markerType)
         ) {
-          let startTime = this.fillOpenCloseTimes(
-            event.times[weekday],
-            weekday
-          );
-          let sign = event.markerType === "completeAfter" ? 1 : -1;
-          for (let position in event.positions) {
-            let [timeLength, isStrict] = this.util.isStrict(
-              event.positions[position]
+          if (event.times.strict[weekday]) {
+            let startTime = this.fillOpenCloseTimes(
+              event.times.strict[weekday],
+              weekday
             );
-            let priorityAssign =
-              isStrict === true || (isStrict === null && globalStrict);
-            if (!priorityAssign) {
-              continue;
-            }
-            let calcTime = this.clock
-              .math()
-              .calcClockTime(startTime, timeLength, sign);
-            calcTime = this.clock.time().toTime(calcTime);
-            if (
-              this.clock
-                .relativeTime(openTimes.startTime)
-                .isBiggerThan(calcTime)
-            ) {
-              openTimes.startTime = calcTime;
-            }
-            if (
-              this.clock.relativeTime(openTimes.endTime).isLessThan(calcTime)
-            ) {
-              openTimes.endTime = calcTime;
+            let sign = event.markerType === "completeAfter" ? 1 : -1;
+            for (let position in event.positions) {
+              //! TODO FIX isStrict
+              let [timeLength, isStrict] = this.util.getValueAndPriority(
+                event.positions[position]
+              );
+              let priorityAssign =
+                isStrict === true || (isStrict === null && globalStrict);
+              if (!priorityAssign) {
+                continue;
+              }
+              let calcTime = this.clock
+                .math()
+                .calcClockTime(startTime, timeLength, sign);
+              calcTime = this.clock.time().toTime(calcTime);
+              if (
+                this.clock
+                  .relativeTime(openTimes.startTime)
+                  .isBiggerThan(calcTime)
+              ) {
+                openTimes.startTime = calcTime;
+              }
+              if (
+                this.clock.relativeTime(openTimes.endTime).isLessThan(calcTime)
+              ) {
+                openTimes.endTime = calcTime;
+              }
             }
           }
         }
@@ -292,8 +296,9 @@ export class Rota {
           employee.availability[priority] &&
           employee.availability[priority].hasOwnProperty(weekday)
         ) {
+          let mappedAvailability = this.fillOpenCloseTimes(employee.availability[priority][weekday], weekday, true)
           availableStaff[priority][employeeName] =
-            employee.availability[priority][weekday];
+          mappedAvailability;
         }
       }
     }

@@ -175,7 +175,7 @@ export class Util {
     };
   }
 
-  updateConfig(data, callback, ...params) {
+  setConfig(data, callback, ...params) {
     let dataType = this.typeof(data);
     if (["string", "number", "boolean"].includes(dataType)) {
       return callback(data, ...params);
@@ -183,67 +183,89 @@ export class Util {
     if (dataType === "object") {
       let result = {};
       for (let entry in data) {
-        let localParams = [];
-        let isConfig =
-          data[entry].hasOwnProperty("value") &&
-          data[entry].hasOwnProperty("priority");
-          localParams.push(entry);
+        let isConfig = this.hasOwnProperties(data[entry], [
+          "strict",
+          "important",
+          "optional",
+        ], '||');
         if (isConfig) {
-          let { priority, value } = data[entry];
+          let setting = data[entry];
+          for (let priority in setting) {
+            setting[priority] = callback(
+              setting[priority],
+              ...params,
+              entry
+            );
+          }
           value = callback(value, ...params, ...localParams);
           result[priority] = value;
         } else {
-          result = {...result, ...callback(data[entry], ...params, ...localParams)}
+          result = {
+            ...result,
+            ...callback(data[entry], ...params, ...localParams),
+          };
         }
       }
       return result;
     }
     return null;
   }
-  isStrict(data) {
-    let dataType = this.typeof(data);
-    if (dataType === "object") {
-      let isConfig =
-        data.hasOwnProperty("value") && data.hasOwnProperty("priority");
-      if (isConfig) {
-        return data.priority === "strict"
-          ? [data.value, true]
-          : [data.value, false];
-      } else {
-        return [data.value, null];
-      }
+
+  hasOwnProperties(object, properties, operator = "&&") {
+    if (operator === "&&") {
+      return properties.find((key) => {
+        if (!object[key]) {
+          return false;
+        }
+      });
+    } else if (operator === "||") {
+      return properties.find((key) => {
+        if (object[key]) {
+          return true;
+        }
+      });
     }
-    return [data, null];
   }
 
   getValueAndPriority(targetObject, valueName) {
     let globalPriority = targetObject.priority ? targetObject.priority : null;
     let targetValue = this.getNestedProperty(targetObject, valueName);
-    let hasPriority = targetValue.priority && targetValue.value ? true : false;
-    return hasPriority
-      ? [targetValue.value, targetValue.priority]
-      : [targetValue, globalPriority];
+    let priority = globalPriority ? globalPriority : "value";
+    if (
+      targetValue.hasOwnProperty("strict") ||
+      targetValue.hasOwnProperty("important") ||
+      targetValue.hasOwnProperty("optional")
+    ) {
+      let result = {};
+      let priorities = Object.keys(targetValue);
+      for (let priority in priorities) {
+        result[priority] = priorities[priority];
+      }
+      return result;
+    } else {
+      return { priority: targetValue };
+    }
   }
 
   getNestedProperty(targetObject, propName) {
-    let propNameArr = propName.split('.');
+    let propNameArr = propName.split(".");
     if (propNameArr.length === 1) {
-      return targetObject[propName]
-    } 
+      return targetObject[propName];
+    }
     return propNameArr.reduce((obj, prop) => {
       return obj && obj[prop] ? obj[prop] : null;
-    }, targetObject)
+    }, targetObject);
   }
   setNestedProperty(targetObject, propName, setValue) {
-    let propNameArr = propName.split('.');
+    let propNameArr = propName.split(".");
     let lastProp = propNameArr.pop();
     if (propNameArr.length === 0) {
       targetObject[lastProp] = setValue;
       return targetObject;
-    } 
+    }
     propNameArr.reduce((obj, prop) => {
       if (!obj[prop]) {
-        obj[prop] = {}
+        obj[prop] = {};
       }
       return obj[prop];
     }, targetObject)[lastProp] = setValue;
