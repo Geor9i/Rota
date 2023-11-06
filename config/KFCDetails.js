@@ -21,42 +21,28 @@ const staffList = {
     surname: "Urumov",
     positions: ["ARGM"],
     contractType: "fullTime",
-    availability: { 
+    availability: {
       "open - 16:00": {
         value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: 'strict'
-      }
+        priority: "strict",
+      },
     },
-  daysOff: {
-    amount: {
-      value: 2,
-      priority: "strict",
-    },
-    consecutive: {
-      value: true,
-      priority: "strict",
-    },
+    daysOff: { strict: 2 },
+    consecutive: { strict: true },
+    minHours: { strict: "36:00" },
   },
-  minHours: {
-    value: 36,
-    priority: "strict",
-  },
-},
   Rita: {
     firstName: "Rita",
     surname: "Sunuwar",
     positions: ["SR"],
     contractType: "fullTime",
     availability: {
-      "14:00 - close":{ 
+      "14:00 - close": {
         value: ["m", "t", "w", "th", "f", "su"],
-        priority: 'important'
-      } 
+        priority: "important",
+      },
     },
-    minHours: {
-      value: 53,
-      priority: 'strict'
-    },
+    minHours: { strict: "53:00" },
   },
   Sean: {
     firstName: "Sean",
@@ -64,23 +50,15 @@ const staffList = {
     positions: ["SR"],
     contractType: "fullTime",
     availability: {
-       "open - close": {
-      value: ["m", "t", "w", "th", "f", "s"],
-      priority: 'optional'
-    } 
-  },
-    daysOff: {
-      amount: 2,
-      consecutive: {
-        value: false,
-        priority: 'optional'
+      "open - close": {
+        value: ["m", "t", "w", "th", "f", "s"],
+        priority: "optional",
       },
     },
-    minHours: {
-      value: 37,
-      priority: 'strict'
-    },
-    priority: 'important'
+    daysOff: 2,
+    consecutive: { optional: false },
+    minHours: { strict: "37:00" },
+    priority: "important",
   },
   Callum: {
     firstName: "Callum",
@@ -90,13 +68,10 @@ const staffList = {
     availability: storeWorkHoursSpan,
     daysOff: {
       amount: 2,
-      consecutive: {
-        value: false,
-        priority: 'optional'
-      },
+      consecutive: { optional: false },
     },
-    minHours: 36,
-    priority: 'strict'
+    minHours: "36:00",
+    priority: "strict",
   },
   Abdul: {
     firstName: "Abdul",
@@ -104,27 +79,24 @@ const staffList = {
     positions: ["BOH"],
     contractType: "fullTime",
     availability: {
-       "09:00 - 17:00":{
-        value:  ["t", "w", "th"],
-        priority: 'strict'
-      }
+      "09:00 - 17:00": {
+        value: ["t", "w", "th"],
+        priority: "strict",
+      },
     },
-    minHours: 21,
+    minHours: { strict: "21:00" },
   },
   Amy: {
     firstName: "Amy",
     surname: "Bowden",
     positions: ["FOH", "MOH"],
     contractType: "fullTime",
-    availability: { 
-      "15:00 - close": ["m", "t", "w", "th", "f", "s"] 
+    availability: {
+      "15:00 - close": ["m", "t", "w", "th", "f", "s"],
     },
     daysOff: 2,
-    minHours: {
-      value: 20,
-      priority: 'important'
-    },
-    priority: 'optional'
+    minHours: { important: "20:00" },
+    priority: "optional",
   },
   Bimala: {
     firstName: "Bimala",
@@ -132,32 +104,26 @@ const staffList = {
     positions: ["FOH", "MOH"],
     contractType: "partTime",
     availability: {
-       "open - 17:00": {
-        value:["s"],
-        priority: 'strict'
-      }, "open - 20:00": {
-        value: ["su"],
-        priority: 'strict'
-      } 
+      "open - 17:00": ["s"],
+      "open - 20:00": ["su"]
     },
-    },
+    priority: "strict",
+  },
   Bruno: {
     firstName: "Bruno",
     surname: "Bataraga",
     positions: ["MOH"],
     contractType: "fullTime",
     availability: {
-       "16:30 - 21:45": {
-      value: ["m", "t", "w", "th", "s"],
-      priority: 'important'
+      "16:30 - 21:45": {
+        value: ["m", "t", "w", "th", "s"],
+        priority: "important",
+      },
     },
-   },
-    daysOff: {
-      amount: 2,
-      consecutive: false,
-    },
-    minHours: 25,
-    priority: 'important'
+    daysOff: 2,
+    consecutive: false,
+    minHours: "25:00",
+    priority: "important",
   },
   Ganga: {
     firstName: "Ganga",
@@ -165,11 +131,8 @@ const staffList = {
     positions: ["FOH", "MOH"],
     contractType: "fullTime",
     availability: { "open - close": ["m", "t", "w", "f", "s", "su"] },
-    minHours: {
-      value: 42,
-      priority: 'strict'
-    },
-    priority: 'important'
+    minHours: { strict: "42:00" },
+    priority: "important",
   },
   Hikmat: {
     firstName: "Hikmat",
@@ -178,21 +141,19 @@ const staffList = {
     contractType: "fullTime",
     availability: { "12:00 - close": ["m", "w", "th", "f", "s", "su"] },
     daysOff: 1,
-    minHours: 45,
-    priority: 'important'
+    minHours: "45:00",
+    priority: "strict",
   },
   Kelly: {
     firstName: "Kelly",
     surname: "Bentley",
     positions: ["FOH", "MOH"],
     contractType: "partTime",
-    availability:{
-       "09:15 - 14:00": {
-        value: ["m", "t", "th", 'f'],
-        priority: 'strict'
-      } 
+    availability: {
+      "09:15 - 14:00": ["m", "t", "th", "f"],
     },
-    minHours: 18,
+    minHours: "18:00",
+    priority: "strict",
   },
   Layla: {
     firstName: "Layla",
@@ -200,7 +161,7 @@ const staffList = {
     positions: ["FOH", "MOH"],
     contractType: "partTime",
     availability: { "16:30 - 21:45": ["s", "su"] },
-    priority: 'important'
+    priority: "important",
   },
   Palraj: {
     firstName: "Palraj",
@@ -209,7 +170,7 @@ const staffList = {
     contractType: "partTime",
     availability: storeWorkHoursSpan,
     daysOff: 2,
-    priority: 'optional'
+    priority: "optional",
   },
   Richard: {
     firstName: "Richard",
@@ -217,22 +178,26 @@ const staffList = {
     positions: ["FOH", "MOH"],
     contractType: "fullTime",
     availability: storeWorkHoursSpan,
-    minHours: 30,
-    priority: 'optional'
+    minHours: "30:00",
+    priority: "optional",
   },
   Santosh: {
     firstName: "Santosh",
     surname: "Ghale",
     positions: ["BOH"],
     contractType: "overtime",
-    availability:{ 
-        "open - 21:00": {
-          value: ["m", "w", "th", "f", "s", "su"],
-          priority: 'important'
-        } 
+    availability: {
+      "open - 21:00": {
+        value: ["m", "w", "th", "f", "s", "su"],
+        priority: "important",
       },
-    minHours: 45,
-    priority: 'important'
+      "open - close": {
+        value: ["m", "w", "th", "f", "s", "su"],
+        priority: "optional",
+      },
+    },
+    minHours: "45:00",
+    priority: "important",
   },
   Sijan: {
     firstName: "Sijan",
@@ -240,7 +205,7 @@ const staffList = {
     positions: ["FOH", "MOH"],
     contractType: "partTime",
     availability: { "open - 17:00": ["su"] },
-    priority: 'strict'
+    priority: "strict",
   },
   Zivile: {
     firstName: "Zivile",
@@ -248,15 +213,12 @@ const staffList = {
     positions: ["FOH", "MOH"],
     contractType: "partTime",
     availability: {
-      "09:15 - 14:00": { 
+      "09:15 - 14:00": {
         value: ["m", "tu", "w", "th"],
-        priority: 'important'
-      }
+        priority: "strict",
+      },
     },
-    minHours: {
-      value: 17,
-      priority: 'strict'
-    },
+    minHours: { strict: "17:00" },
   },
 };
 
@@ -266,16 +228,11 @@ const events = {
     times: {
       "open - close": {
         value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: 'strict'
+        priority: "strict",
       },
     },
     positions: {
-      BOH: {
-        staff: {
-          value: 2,
-          priority: 'optional'
-        },
-      },
+      BOH: { optional: 2 },
     },
   },
   cashier: {
@@ -283,16 +240,11 @@ const events = {
     times: {
       "open - close": {
         value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: 'strict'
+        priority: "strict",
       },
     },
     positions: {
-      FOH: {
-        staff: {
-          value: 2,
-          priority: 'optional'
-        },
-      },
+      FOH: { optional: 2 },
     },
   },
   sr: {
@@ -300,128 +252,104 @@ const events = {
     times: {
       "open - close": {
         value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: 'strict'
+        priority: "strict",
       },
     },
     positions: {
-      SR: {
-        staff: {
-          value: 2,
-          priority: 'optional'
-        },
-      },
+      SR: { optional: 2 },
     },
   },
   open: {
     markerType: "completeBefore",
     times: {
-      "open": {
+      open: {
         value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: 'strict'
+        priority: "strict",
       },
     },
     positions: {
-        SR: "01:00",
-        BOH: "02:00",
-        FOH: "01:00",
-        MOH: "01:00",
+      SR: "01:00",
+      BOH: "02:00",
+      FOH: "01:00",
+      MOH: "01:00",
     },
-    priority: 'strict'
+    priority: "strict",
   },
   close: {
     markerType: "completeAfter",
     times: {
-      "close": {
+      close: {
         value: ["m", "t", "w", "th", "f", "s", "su"],
-        priority: 'strict'
+        priority: "strict",
       },
     },
     positions: {
-        SR: "00:30",
-        BOH: "01:00",
-        FOH: "00:30",
-        MOH: "00:30",
+      SR: "00:30",
+      BOH: "01:00",
+      FOH: "00:30",
+      MOH: "00:30",
     },
-    priority: 'strict'
+    priority: "strict",
   },
   delivery: {
     markerType: "timeFrame",
     times: {
-        "07:00 - 09:00": {
-          value: ["m", "w", "f"],
-          priority: 'strict'
+      "07:00 - 09:00": {
+        value: ["m", "w", "f"],
+        priority: "strict",
       },
     },
     positions: {
-      all: {
-          staff: 2,
-        },
-      },
-      priority: 'important'
+      all: 2,
     },
+    priority: "important",
+  },
   admin: {
-    priority: 'strict',
+    priority: "strict",
     markerType: "timeFrame",
-    times: { "09:00 - 17:00": {
-      value: ["m"],
-      priority: 'important'
-    }
-   },
+    times: {
+      "09:00 - 17:00": {
+        value: ["m"],
+        priority: "important",
+      },
+    },
     positions: {
-      RGM: {
-        staff: 1
-      }
-    }
+      RGM: 1,
+    },
   },
   lunchPeak: {
-    priority: 'important',
+    priority: "important",
     markerType: "timeFrame",
     times: {
       "12:00 - 14:00": ["m", "t", "w", "th", "f"],
     },
     positions: {
-      FOH: {
-        staff: 2,
-      },
-      MOH: {
-        staff: 2,
-      },
+      FOH: 2,
+      MOH: 2,
     },
   },
   eveningPeak: {
-    priority: 'important',
+    priority: "important",
     markerType: "timeFrame",
     times: {
       "17:00 - 21:00": ["m", "t", "w", "th", "f"],
     },
     positions: {
-      FOH: {
-        staff: 2,
-      },
-      MOH: {
-        staff: 2,
-      },
-      BOH: {
-        staff: 2
-      }
+      FOH: 2,
+      MOH: 2,
+      BOH: 2,
     },
   },
   weekendPeak: {
-    priority: 'important',
+    priority: "important",
     markerType: "timeFrame",
     times: {
       "12:00 - 20:00": ["s", "su"],
     },
     positions: {
-      FOH: {
-        staff: 2,
-      },
-      MOH: {
-        staff: 2,
-      },
-      BOH: {
-        staff: 2
-      }
+      FOH: 2,
+      MOH: 2,
+      BOH: 2,
     },
   },
 };

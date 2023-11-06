@@ -183,22 +183,17 @@ export class Util {
     if (dataType === "object") {
       let result = {};
       for (let entry in data) {
+        let localParams = [];
         let isConfig =
           data[entry].hasOwnProperty("value") &&
           data[entry].hasOwnProperty("priority");
-        params.push(entry);
+          localParams.push(entry);
         if (isConfig) {
           let { priority, value } = data[entry];
-          value = callback(value, ...params);
-          for (let day in value) {
-            value[day] = {
-              value: value[day],
-              priority: priority,
-            };
-          }
-          result = { ...result, ...value };
+          value = callback(value, ...params, ...localParams);
+          result[priority] = value;
         } else {
-          result = { ...result, ...callback(data[entry], ...params) };
+          result = {...result, ...callback(data[entry], ...params, ...localParams)}
         }
       }
       return result;
@@ -223,10 +218,39 @@ export class Util {
 
   getValueAndPriority(targetObject, valueName) {
     let globalPriority = targetObject.priority ? targetObject.priority : null;
-    let targetValue = targetObject[valueName];
+    let targetValue = this.getNestedProperty(targetObject, valueName);
     let hasPriority = targetValue.priority && targetValue.value ? true : false;
     return hasPriority
       ? [targetValue.value, targetValue.priority]
       : [targetValue, globalPriority];
+  }
+
+  getNestedProperty(targetObject, propName) {
+    let propNameArr = propName.split('.');
+    if (propNameArr.length === 1) {
+      return targetObject[propName]
+    } 
+    return propNameArr.reduce((obj, prop) => {
+      return obj && obj[prop] ? obj[prop] : null;
+    }, targetObject)
+  }
+  setNestedProperty(targetObject, propName, setValue) {
+    let propNameArr = propName.split('.');
+    let lastProp = propNameArr.pop();
+    if (propNameArr.length === 0) {
+      targetObject[lastProp] = setValue;
+      return targetObject;
+    } 
+    propNameArr.reduce((obj, prop) => {
+      if (!obj[prop]) {
+        obj[prop] = {}
+      }
+      return obj[prop];
+    }, targetObject)[lastProp] = setValue;
+    return targetObject;
+  }
+
+  findAvailableDaysOff(employee) {
+    console.log(employee);
   }
 }

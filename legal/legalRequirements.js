@@ -16,10 +16,13 @@ export class LegalRequirements{
             min: '08:00',
             max: {
                 'student': '20:00',
-                'partTime': '35:00',
-                'fullTime': '48:00',
+                'parttime': '35:00',
+                'fulltime': '48:00',
                 'overtime': '60:00',
             }
+        },
+        this.daysOff = {
+            min: 1
         }
     }
 }

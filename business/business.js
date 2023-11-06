@@ -111,8 +111,7 @@ export class Business {
 
       populateEmployeeDetails: (employee) => {
         let person = { ...employee };
-        if (person.firstName === "Sean") {
-          // debugger
+        if (person.firstName === "Bimala") {
         }
         person.firstName = this.util.string.format(person.firstName);
         person.surname = this.util.string.format(person.surname);

@@ -55,22 +55,24 @@ export class Evaluator {
     }
 
     getEmployeePotential(employeeConfig) {
+
         let report = {
             daysOffAmount: {
-                strict: 0,
+                strict: this.legal.daysOff.min,
                 important: 0,
                 optional: 0,
             },
             minHours: {
-                strict: 0,
+                strict: this.legal.weeklyHours.min,
                 important: 0,
                 optional: 0,
             },
-            availableWorkTimes: {
-                strict: {},
-                important: {},
-                optional: {},
+            maxHours: {
+                strict: this.legal.weeklyHours.max[employeeConfig.contractType],
+                important: 0,
+                optional: 0,
             },
+            availableWorkTimes: {},
             availableDaysOff:{
                 strict: [],
                 important: [],
@@ -82,8 +84,40 @@ export class Evaluator {
                 optional: null,
             },
         };
-        let globalPriority = employeeConfig.priority ? employeeConfig.priority : null;
 
+        const setValue = (reportValueName, employeeValueName) => {
+            employeeValueName = employeeValueName ? employeeValueName : reportValueName;
+            let [value, valuePriority] = this.util.getValueAndPriority(employeeConfig, employeeValueName);
+                if (value) {
+                    if (valuePriority) {
+                        this.util.setNestedProperty(report, `${reportValueName}.${valuePriority}`, value );
+                    } else {
+                        this.util.setNestedProperty(report, `${reportValueName}.optional`, value );
+                    }
+                } else {
+                    throw new Error('Cannot set Value!')
+                }
+            }
+
+        try {
+            setValue('minHours');
+            setValue('consecutiveDaysOff', 'daysOff.consecutive');
+            setValue('daysOffAmount', 'daysOff.amount');
+            //? set Availability
+            let availability = employeeConfig.availability;
+            for (let priority in availability) {
+                report.availableWorkTimes[priority] = employeeConfig.availability[priority];
+            }
+            //? set availableDaysOff
+            this.util.findAvailableDaysOff(employeeConfig);
+
+        } catch(err) {
+            console.log({err: err.message, name: employeeConfig.firstName});
+        }
+
+        console.log(report);
+        
+       
 
     }
 }
