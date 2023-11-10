@@ -1,33 +1,33 @@
 import { Util } from "../utils/util.js";
 import { Clock } from "../utils/clock.js";
 import { Evaluator } from "./evaluator.js";
+import { DateUtil } from "../utils/dateUtil.js";
 
 export class Rota {
   constructor(business) {
     this.util = new Util();
     this.clock = new Clock();
+    this.date = new DateUtil();
     this.positions = business.positions;
     this.businessName = business.name;
     this.staff = business.staff;
     this.evaluator = new Evaluator(this.staff);
     this.events = business.events;
-    this.dayFrame = this.util.getWeekdays({});
+    this.dayFrame = this.date.getWeekdays({});
     this.openTimes = business.workHours;
     this.hourlyAvailability = {};
   }
 
   create(date, labourHours) {
-    date = this.util.date(date).getMonday();
+    date = this.date.op(date).getMonday();
     this.openTimes = this.util.iterate(this.openTimes, this.clock.time().toObj);
     const [rota, staffAvailability] = this.init();
-    console.log(this.dayFrame)
-    // this.evaluator.report(rota);
-    console.log(staffAvailability);
+    this.evaluator.report(rota);
   }
 
   init() {
     this.computeAvailability();
-    const rota = this.util.getWeekdays({});
+    const rota = this.date.getWeekdays({});
     const staffAvailability = { ...rota };
     for (let weekday in rota) {
       this.dayFrame[weekday] = this.strictWorkHours(weekday);
@@ -46,9 +46,7 @@ export class Rota {
 
     for (let entry in this.events) {
       const event = this.events[entry];
-      const globalStrict =
-        event.priority && event.priority === "strict" ? true : false;
-      if (event.times.strict[weekday]) {
+      if (event.times.hasOwnProperty('strict') && event.times.strict[weekday]) {
         if (event.markerType === "timeFrame") {
           let timeFrame = this.fillOpenCloseTimes(
             event.times.strict[weekday],
@@ -79,13 +77,9 @@ export class Rota {
             );
             let sign = event.markerType === "completeAfter" ? 1 : -1;
             for (let position in event.positions) {
-              //! TODO FIX isStrict
-              let [timeLength, isStrict] = this.util.getValueAndPriority(
-                event.positions[position]
-              );
-              let priorityAssign =
-                isStrict === true || (isStrict === null && globalStrict);
-              if (!priorityAssign) {
+              let configObject = this.util.getPriorityValue(event, `positions.${position}`);
+              let [priority, timeLength] = Object.entries(configObject)[0];
+              if (priority !== 'strict') {
                 continue;
               }
               let calcTime = this.clock
@@ -122,19 +116,14 @@ export class Rota {
 
     for (let entry in this.events) {
       const event = this.events[entry];
-      const globalStrict =
-        event.priority && event.priority === "strict" ? true : false;
 
-      if (event.times[weekday] && event.markerType === "timeFrame") {
-        let timeSpan = this.fillOpenCloseTimes(event.times[weekday], weekday);
+      if (event.times.strict && event.times.strict[weekday] && event.markerType === "timeFrame") {
+        let timeSpan = this.fillOpenCloseTimes(event.times.strict[weekday], weekday);
         let timeLength = this.clock.time().timeSpanLength(timeSpan);
         for (let position in event.positions) {
-          let [staffCount, isStrict] = this.util.isStrict(
-            event.positions[position].staff
-          );
-          let priorityAssign =
-            isStrict === true || (isStrict === null && globalStrict);
-          staffCount = priorityAssign ? staffCount : 1;
+          let positionConfig = this.util.getPriorityValue(event, `positions.${position}`)
+          let [priority, staffCount] = Object.entries(positionConfig)[0];
+          staffCount = priority === 'strict' ? staffCount : 1;
           let totalHours = this.clock
             .math()
             .multiplyNormal(timeLength, staffCount);
@@ -144,13 +133,12 @@ export class Rota {
         }
       } else if (
         ["completeBefore", "completeAfter"].includes(event.markerType) &&
-        event.times[weekday]
+        event.times.strict && event.times.strict[weekday]
       ) {
         for (let position in event.positions) {
-          let [hours, isStrict] = event.positions[position];
-          let priorityAssign =
-            isStrict === true || (isStrict === null && globalStrict);
-          if (priorityAssign) {
+          const hoursConfig = this.util.getPriorityValue(event, `positions.${position}`)
+          let [priority, hours] = Object.entries(hoursConfig)[0];
+          if (priority === 'strict') {
             positionTotalHours[position] = this.clock
               .math()
               .add(positionTotalHours[position], hours);
@@ -171,53 +159,51 @@ export class Rota {
 
     for (let entry in this.events) {
       const event = this.events[entry];
-      const globalStrict =
-        event.priority && event.priority === "strict" ? true : false;
-
-      if (event.times[weekday]) {
+      if (event.times.strict && event.times.strict[weekday]) {
         if (event.markerType === "timeFrame") {
           let timeFrame = this.fillOpenCloseTimes(
-            event.times[weekday],
+            event.times.strict[weekday],
             weekday
           );
           for (let position in event.positions) {
-            let [staffCount, isStrict] = this.util.isStrict(
-              event.positions[position].staff
-            );
-            let priorityAssign =
-              isStrict === true || (isStrict === null && globalStrict);
-            staffCount = priorityAssign ? staffCount : 1;
+          
+            let positionConfig = this.util.getPriorityValue(event, `positions.${position}`)
+          let [priority, staffCount] = Object.entries(positionConfig)[0];
+            staffCount = priority === 'strict' ? staffCount : 1;
             if (!timeline.hasOwnProperty(position)) {
               timeline[position] = {};
             }
             if (!timeline[position].hasOwnProperty(timeFrame)) {
               timeline[position][timeFrame] = staffCount;
+            } else {
+              timeline[position][timeFrame] += staffCount;
             }
           }
         } else if (
           ["completeBefore", "completeAfter"].includes(event.markerType)
         ) {
           for (let position in event.positions) {
-            let eventTime = this.fillOpenCloseTimes(
-              event.times[weekday],
-              weekday
-            );
-            let [timeLength, isStrict] = this.util.isStrict(
-              event.positions[position]
-            );
-            let priorityAssign =
-              isStrict === true || (isStrict === null && globalStrict);
-            if (!priorityAssign) {
-              continue;
-            }
-            if (!timeline.hasOwnProperty(position)) {
-              timeline[position] = {};
-            }
-            if (!timeline[position].hasOwnProperty(eventTime)) {
-              timeline[position][eventTime] = {
-                timeLength,
-                markerType: event.markerType,
-              };
+            if (event.times.strict && event.times.strict[weekday]) {
+              let eventTime = this.fillOpenCloseTimes(
+                event.times.strict[weekday],
+                weekday
+              );
+              const hoursConfig = this.util.getPriorityValue(event, `positions.${position}`)
+              let [priority, hours] = Object.entries(hoursConfig)[0];
+              if (priority !== 'strict') {
+                continue;
+              }
+              if (!timeline.hasOwnProperty(position)) {
+                timeline[position] = {};
+              }
+              if (!timeline[position].hasOwnProperty(eventTime)) {
+                timeline[position][eventTime] = {
+                  hours,
+                  markerType: event.markerType,
+                };
+              } else {
+                timeline[position][eventTime].hours = this.clock.math().add(timeline[position][eventTime].hours, hours);
+              }
             }
           }
         }
@@ -266,12 +252,14 @@ export class Rota {
     for (let entry in this.events) {
       const event = this.events[entry];
 
-      if (event.times[weekday] && event.markerType === "timeFrame") {
-        let timeSpan = this.fillOpenCloseTimes(event.times[weekday], weekday);
-        let eventIsAtThatTime = this.clock.time(queryTime).isWithin(timeSpan);
-        if (eventIsAtThatTime) {
+      if (event.times.strict && event.times.strict[weekday] && event.markerType === "timeFrame") {
+        let timeSpan = this.fillOpenCloseTimes(event.times.strict[weekday], weekday);
+        let isAtQueryTime = this.clock.time(queryTime).isWithin(timeSpan);
+        if (isAtQueryTime) {
           for (let pos in event.positions) {
-            let staffCount = event.positions[pos].staff;
+            let staffConfig = this.util.getPriorityValue(event, `positions.${pos}`);
+            let [priority, staffCount] = Object.entries(staffConfig)[0];
+            staffCount = priority === 'strict' ? staffCount : 1;
             if (staffRequirements[pos] < staffCount) {
               staffRequirements[pos] = staffCount;
             }
@@ -306,7 +294,7 @@ export class Rota {
   }
 
   computeAvailability() {
-    let weekdays = this.util.getWeekdays([]);
+    let weekdays = this.date.getWeekdays([]);
     let list = this.staff.list;
     for (let employeeName in list) {
       let employee = list[employeeName];

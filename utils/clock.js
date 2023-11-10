@@ -1,29 +1,33 @@
 export class Clock {
   math() {
     return {
-      add: (timeA, timeB) => this.math().calcTime(timeA, timeB, '+'),
-      deduct: (timeA, timeB) => this.math().calcTime(timeA, timeB, '-'),
-      multiply: (timeA, timeB) => this.math().calcTime(timeA, timeB, '*'),
-      divide: (timeA, timeB) => this.math().calcTime(timeA, Math.max(timeB, 1), '/'),
-      multiplyNormal: (time, number) => this.math().calcTime(time, number, 'multiply'),
-      divideNormal: (time, number) => this.math().calcTime(time, number, 'divide'),
+      add: (timeA, timeB) => this.math().calcTime(timeA, timeB, "+"),
+      deduct: (timeA, timeB) => this.math().calcTime(timeA, timeB, "-"),
+      multiply: (timeA, timeB) => this.math().calcTime(timeA, timeB, "*"),
+      divide: (timeA, timeB) =>
+        this.math().calcTime(timeA, Math.max(timeB, 1), "/"),
+      multiplyNormal: (time, number) =>
+        this.math().calcTime(time, number, "multiply"),
+      divideNormal: (time, number) =>
+        this.math().calcTime(time, number, "divide"),
       calcTime: (timeA, param2, sign) => {
         timeA = this.time().toMinutes(timeA);
-        param2 = typeof param2 === 'number' ? param2 : this.time().toMinutes(param2); 
+        param2 =
+          typeof param2 === "number" ? param2 : this.time().toMinutes(param2);
         let methods = {
-          '+': () => timeA + param2,
-          '-': () => timeA - param2,
-          '*': () => ((timeA / 60) * (param2 / 60)) * 60,
-          '/': () => ((timeA / 60) / (param2 / 60)) * 60,
-          'multiply': () => timeA * param2,
-          'divide': () => timeA / param2,
-        }
+          "+": () => timeA + param2,
+          "-": () => timeA - param2,
+          "*": () => (timeA / 60) * (param2 / 60) * 60,
+          "/": () => (timeA / 60 / (param2 / 60)) * 60,
+          multiply: () => timeA * param2,
+          divide: () => timeA / param2,
+        };
         let result = methods[sign]();
-        let resultSign = Math.sign(result) === 1 ? '' : '-';
+        let resultSign = Math.sign(result) === 1 ? "" : "-";
         result = Math.abs(result);
         let h = Math.floor(result / 60);
-        let m = Math.floor(result - (h * 60));
-        let lz = (num) => Math.abs(num) < 10 ? '0' : '';
+        let m = Math.floor(result - h * 60);
+        let lz = (num) => (Math.abs(num) < 10 ? "0" : "");
         return `${resultSign}${lz(h)}${h}:${lz(m)}${m}`;
       },
       calcClockTime: (time, modTime, sign = "+") => {
@@ -38,7 +42,7 @@ export class Clock {
           clockHours.h < 0 || clockHours.h > 24
             ? clockHours.h + 24 * Math.max(dayCount, 1) * -1
             : clockHours.h;
-        clockHours.m = clockHours.m + (modHours.m * sign);
+        clockHours.m = clockHours.m + modHours.m * sign;
         if (clockHours.m < 0) {
           clockHours.m += 60;
           clockHours.h =
@@ -53,7 +57,6 @@ export class Clock {
         }
         return clockHours;
       },
-     
     };
   }
 
@@ -108,13 +111,14 @@ export class Clock {
       },
       isWithin: (timeFrame) => {
         let queryTime = {};
-        if (this.time().detect(time) === 'time') {
+        if (this.time().detect(time) === "time") {
           [queryTime.startTime, queryTime.endTime] = [time, time];
-        } else if (this.time().detect(time) === 'timeFrame') {
+        } else if (this.time().detect(time) === "timeFrame") {
           let queryFrame = this.time().toObj(time);
-          queryTime = {...queryFrame};
+          queryTime = { ...queryFrame };
         }
-        let {startTime: timeFrameStart, endTime: timeFrameEnd} = this.time().toObj(timeFrame);
+        let { startTime: timeFrameStart, endTime: timeFrameEnd } =
+          this.time().toObj(timeFrame);
         if (
           this.time(timeFrameStart).isLessEqThan(queryTime.startTime) &&
           this.time(timeFrameEnd).isBiggerEqThan(queryTime.endTime)
@@ -124,19 +128,26 @@ export class Clock {
         return false;
       },
       detect(time) {
-        if (time.includes(' - ') && time.length === 13) {
-          return 'timeFrame'
-        } else if (time.includes(':') && time.length === 5) {
-          return 'time'
+        if (time.includes(" - ") && time.length === 13) {
+          return "timeFrame";
+        } else if (time.includes(":") && time.length === 5) {
+          return "time";
         }
       },
       timeSpanLength: (timeSpan) => {
         let isTimeSpan = this.validate(timeSpan);
-        if(!isTimeSpan) return timeSpan;
-        
+        if (!isTimeSpan) return timeSpan;
+
         let timeObj = this.time().toObj(timeSpan);
-        let biggerTime = this.time(timeObj.startTime).isBiggerThan(timeObj.endTime) ? timeObj.startTime : timeObj.endTime;
-        let smallerTime = timeObj.startTime === biggerTime ? timeObj.endTime : timeObj.startTime;
+        let biggerTime = this.time(timeObj.startTime).isBiggerThan(
+          timeObj.endTime
+        )
+          ? timeObj.startTime
+          : timeObj.endTime;
+        let smallerTime =
+          timeObj.startTime === biggerTime
+            ? timeObj.endTime
+            : timeObj.startTime;
         return this.math().deduct(biggerTime, smallerTime);
       },
       toMinutes: (time) => {
@@ -145,7 +156,7 @@ export class Clock {
       },
       toSeconds: (time) => {
         let obj = this.time().toObj(time);
-        return (obj.h * 60 * 60) + (obj.m * 60);
+        return obj.h * 60 * 60 + obj.m * 60;
       },
       toHours: (minutes) => {
         let hours = Math.trunc(Math.max(0, minutes / 60));
@@ -155,28 +166,27 @@ export class Clock {
         };
       },
       toThousands(time) {
-        return Number(time.replace(':', ''));
+        return Number(time.replace(":", ""));
       },
       toTime(time, options = {}) {
         if (options.fromMinutes) {
           let h = Math.floor(time / 60);
-          let m = time - (h * 60);
+          let m = time - h * 60;
           let lzH = h < 10 ? "0" : "";
           let lzM = m < 10 ? "0" : "";
           return `${lzH}${h}:${lzM}${m}`;
         }
-        if (typeof time === 'object') {
+        if (typeof time === "object") {
           let lzH = time.h < 10 ? "0" : "";
           let lzM = time.m < 10 ? "0" : "";
           return `${lzH}${time.h}:${lzM}${time.m}`;
-        } else if (typeof time === 'number') {
+        } else if (typeof time === "number") {
           let h = Math.floor(time / 100);
-          let m = time - (h * 100);
+          let m = time - h * 100;
           let lzH = h < 10 ? "0" : "";
           let lzM = m < 10 ? "0" : "";
           return `${lzH}${h}:${lzM}${m}`;
         }
-       
       },
       breakLength: (shift) => {
         let minutes = this.shiftLength(shift[0], shift[1]);
@@ -190,7 +200,7 @@ export class Clock {
       },
       toObj: (time) => {
         if (typeof time === "object") {
-          return time;
+          return { ...time };
         }
 
         if (time.includes(" - ")) {
@@ -210,8 +220,8 @@ export class Clock {
   }
 
   validate(time) {
-    if(time.includes(' - ')) {
-      return 'timeSpan'
+    if (time.includes(" - ")) {
+      return "timeSpan";
     }
   }
 

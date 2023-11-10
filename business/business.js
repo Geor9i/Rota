@@ -1,9 +1,11 @@
+import { DateUtil } from "../utils/dateUtil.js";
 import { Util } from "../utils/util.js";
 
 export class Business {
   constructor(name) {
     this.name = name;
     this.util = new Util();
+    this.date = new DateUtil();
     this.workHours = null;
     this.positions = {
       management: [],
@@ -24,7 +26,10 @@ export class Business {
         eventNames.forEach((name) => {
           if (!this.events.hasOwnProperty(name)) {
             this.events[name] = { ...events[name] };
-            this.events[name].times = this.util.setConfig(events[name].times, this.workDaysAndTimes.bind(this));
+            this.events[name].times = this.util.setConfig(
+              events[name].times,
+              this.workDaysAndTimes.bind(this)
+            );
           }
         });
       },
@@ -33,14 +38,14 @@ export class Business {
 
   workDaysAndTimes(weekdayData, timeFrame = null) {
     if (Array.isArray(weekdayData) && timeFrame) {
-      let result = this.util.getWeekdays(weekdayData, { sort: true });
+      let result = this.date.getWeekdays(weekdayData, { sort: true });
       return this.workDaysAndTimes({ [timeFrame]: result });
     }
 
     let openingTimes = {};
     for (let time in weekdayData) {
       let weekdaysArr = weekdayData[time];
-      weekdaysArr = this.util.getWeekdays(weekdaysArr, { sort: true });
+      weekdaysArr = this.date.getWeekdays(weekdaysArr, { sort: true });
       weekdaysArr.forEach((weekday) => {
         if (!openingTimes.hasOwnProperty(weekday)) {
           openingTimes[weekday] = time;
@@ -111,17 +116,14 @@ export class Business {
 
       populateEmployeeDetails: (employee) => {
         let person = { ...employee };
-        if (person.firstName === "Bimala") {
-        }
         person.firstName = this.util.string.format(person.firstName);
         person.surname = this.util.string.format(person.surname);
         person.positions = this.util.string.format(person.positions);
         person.contractType = this.util.string.format(person.contractType);
-        person.availability = this.util.setConfig(
-          person.availability,
-          this.workDaysAndTimes.bind(this)
-        );
-
+        person.availability = this.util.setConfig(person, 'availability', this.workDaysAndTimes.bind(this));
+        if (person.daysOff) {
+          person.daysOff = this.util.setConfig(person, 'daysOff', this.date.getWeekdays.bind(this.date), {sort:true});
+        }
         return person;
       },
 

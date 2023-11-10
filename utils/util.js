@@ -5,40 +5,6 @@ export class Util {
     this.string = new StringUtil();
   }
 
-  getWeekdays(data, options = {}) {
-    let syntaxVariations = {
-      monday: ["mon", "monday", "m", "mo", "1"],
-      tuesday: ["tue", "tuesday", "tu", "t", "2"],
-      wednesday: ["wed", "wednesday", "we", "w", "3"],
-      thursday: ["thu", "thursday", "thur", "th", "4"],
-      friday: ["fri", "friday", "fr", "f", "5"],
-      saturday: ["sat", "saturday", "sa", "s", "6"],
-      sunday: ["sun", "sunday", "su", "7"],
-    };
-    if (Array.isArray(data)) {
-      let remove = options.remove
-        ? options.remove.map((d) => this.getWeekdays(d))
-        : [];
-      if (options.sort) {
-        return data
-          .map((day) => this.getWeekdays(day))
-          .filter((day, index, arr) => arr.indexOf(day) === index)
-          .filter((day) => (remove.includes(day) ? false : true));
-      }
-      return Object.keys(syntaxVariations);
-    } else if (typeof data === "object" && Object.keys(data).length === 0) {
-      return this.reduceToObj(this.getWeekdays([]), {});
-    }
-
-    let string = data.toLowerCase();
-
-    for (let day in syntaxVariations) {
-      if (syntaxVariations[day].includes(string)) {
-        return day;
-      }
-    }
-  }
-
   includes(data, target) {
     let dataType = this.typeof(data);
     let targetType = this.typeof(target);
@@ -103,9 +69,11 @@ export class Util {
   }
 
   typeof(target) {
+    if (target === null) return null;
+    if (target === undefined) return undefined;
     let types = ["number", "string", "object", "boolean"];
     let targetType = typeof target;
-    if (!types.includes(targetType)) return null;
+    if (!types.includes(targetType)) return targetType;
 
     if (targetType !== "object") {
       return targetType;
@@ -114,99 +82,47 @@ export class Util {
     }
   }
 
-  date(date) {
-    this.result = date;
-    return {
-      format: (options = {}) => {
-        options.delimiter = options.delimiter ? options.delimiter : "/";
-        if (typeof this.result === "object") {
-          let del = options.delimiter;
-          return `${this.result.getFullYear()}${del}${
-            this.result.getMonth() + 1
-          }${del}${this.result.getDate()}`;
-        }
-        let datePattern =
-          /(?<normal>(?<day>\d{1,2})(?<d>\D+)(?<month>\d{1,2})\k<d>(?<year>\d{2,4}))|(?<reverse>(?<year1>\d{2,4})(?<d1>\D+)(?<month1>\d{1,2})\k<d1>(?<day1>\d{1,2}))/;
-
-        let dateMatch = this.result.match(datePattern);
-        if (!dateMatch) {
-          throw new Error("Wrong date format!");
-        }
-
-        let day, month, year;
-        if (dateMatch.groups.normal) {
-          [day, month, year] = [
-            dateMatch.groups.day,
-            dateMatch.groups.month,
-            dateMatch.groups.year,
-          ];
-        } else if (dateMatch.groups.reverse) {
-          [day, month, year] = [
-            dateMatch.groups.day1,
-            dateMatch.groups.month1,
-            dateMatch.groups.year1,
-          ];
-        }
-        let fullYearLength = 4;
-        let yearStart = `${new Date().getFullYear()}`.slice(
-          0,
-          fullYearLength - `${year}`.length
-        );
-        year = `${yearStart}${year}`;
-        return options.asString
-          ? `${year}/${month}/${day}`
-          : new Date(`${year}/${month}/${day}`);
-      },
-
-      getMonday: (options = {}) => {
-        let step = options.next ? 1 : -1;
-        let date = this.date(this.result).format();
-        if (date.getDay() === 1 && !options.previous && !options.next) {
-          return date;
-        }
-        date = new Date(date.setDate(date.getDate() + step));
-        let day = date.getDay();
-        while (day !== 1) {
-          date = new Date(date.setDate(date.getDate() + step));
-          day = date.getDay();
-        }
-        return date;
-      },
-    };
-  }
-
-  setConfig(data, callback, ...params) {
-    let dataType = this.typeof(data);
+  setConfig(targetObject, setValue, callback, ...params) {
+    let config = this.getPriorityValue(targetObject, setValue);
+    let dataType = this.typeof(config);
     if (["string", "number", "boolean"].includes(dataType)) {
-      return callback(data, ...params);
+      return callback(config, ...params);
     }
     if (dataType === "object") {
       let result = {};
-      for (let entry in data) {
-        let isConfig = this.hasOwnProperties(data[entry], [
-          "strict",
-          "important",
-          "optional",
-        ], '||');
-        if (isConfig) {
-          let setting = data[entry];
-          for (let priority in setting) {
-            setting[priority] = callback(
-              setting[priority],
+      for (let entry in config) {
+        let isValueConfig = this.hasOwnProperties(
+          config[entry],
+          ["strict", "important", "optional"],
+          "||"
+        );
+        let isConfig = this.hasOwnProperties(
+          config,
+          ["strict", "important", "optional"],
+          "||"
+        );
+        if (isValueConfig) {
+          for (let priority in config[entry]) {
+            result[priority] = callback(
+              config[entry][priority],
               ...params,
               entry
             );
           }
-          value = callback(value, ...params, ...localParams);
-          result[priority] = value;
+        } else if (isConfig) {
+          for (let priority in config) {
+            result[priority] = callback(config[priority], ...params, entry);
+          }
         } else {
           result = {
             ...result,
-            ...callback(data[entry], ...params, ...localParams),
+            ...callback(config[entry], ...params, entry),
           };
         }
       }
       return result;
+    } else if (dataType === "array") {
+      return callback(targetObject, ...params);
     }
     return null;
   }
@@ -217,45 +133,253 @@ export class Util {
         if (!object[key]) {
           return false;
         }
-      });
+      })
+        ? true
+        : false;
     } else if (operator === "||") {
       return properties.find((key) => {
         if (object[key]) {
           return true;
         }
-      });
+      })
+        ? true
+        : false;
     }
   }
 
-  getValueAndPriority(targetObject, valueName) {
-    let globalPriority = targetObject.priority ? targetObject.priority : null;
-    let targetValue = this.getNestedProperty(targetObject, valueName);
-    let priority = globalPriority ? globalPriority : "value";
+  getPriorityValue(targetObject, valueName) {
+    if (this.typeof(targetObject) !== "object") return targetObject;
+
+    let globalPriority = targetObject.priority
+      ? targetObject.priority
+      : "optional";
+    let targetValue = this.keyTools(targetObject, { extractKey: valueName });
+    let setPriority = this.keyTools(targetValue, {
+      immerseKey: globalPriority,
+      avoidKeys: ["strict", "important", "optional"],
+    });
+    return this.merge(targetValue, setPriority, [
+      "strict",
+      "important",
+      "optional",
+    ]);
+  }
+
+  merge(objectA, objectB, priorityKeys) {
+    if (this.typeof(objectA) !== "object") return objectB;
+    if (this.typeof(objectB) !== "object") return objectA;
+    priorityKeys =
+      priorityKeys && Array.isArray(priorityKeys)
+        ? priorityKeys
+        : [priorityKeys];
+    let prioritizedA = this.keyTools(objectA, { extractSubKeys: priorityKeys });
+    let prioritizedB = this.keyTools(objectB, { extractSubKeys: priorityKeys });
+    return { ...prioritizedA, ...prioritizedB };
+  }
+  /**
+   *
+   * @param {Object} targetObject Supply target Object
+   * @param {Object} options supply targets
+   * @param {String} options.extractKey look only inside this specific Key name in the object
+   * @param {Boolean} options.extractSubKeys an array of all wanted properties!
+   * @param {String} options.immerseKey Value used as key for new object used to surround all qualifying end value
+   * @param {Array} options.avoidKeys object keys to avoid during immersion
+   *
+   * @returns {Object} a new Object containing all wanted keys containing props and their values unless  options.targetKey are specified, in which case it returns an object with the values discovered under the targetKey
+   */
+  keyTools(
+    targetObject,
+    {
+      extractKey = null,
+      extractSubKeys = null,
+      immerseKey = null,
+      avoidKeys = null,
+    } = {}
+  ) {
     if (
-      targetValue.hasOwnProperty("strict") ||
-      targetValue.hasOwnProperty("important") ||
-      targetValue.hasOwnProperty("optional")
-    ) {
-      let result = {};
-      let priorities = Object.keys(targetValue);
-      for (let priority in priorities) {
-        result[priority] = priorities[priority];
+      (this.typeof(targetObject) !== "object" && (!immerseKey || !avoidKeys)) ||
+      (!extractKey && !extractSubKeys && !immerseKey && !avoidKeys)
+    )
+      return null;
+
+    extractSubKeys = extractSubKeys
+      ? Array.isArray(extractSubKeys)
+        ? extractSubKeys
+        : [extractSubKeys]
+      : null;
+    const log = {
+      withinTargetKey: false,
+      targetKeyExtracted: false,
+      paths: {},
+    };
+
+    const submerge = (targetObject, path = {}) => {
+      const validateKey = (key) => {
+        if (extractKey === key || log.withinTargetKey) {
+          log.withinTargetKey = true;
+          return true;
+        }
+        if (extractSubKeys && extractSubKeys.includes(key)) {
+          return true;
+        }
+
+        return false;
+      };
+      const validateImmersion = (targetObject, key) => {
+        if (
+          immerseKey &&
+          avoidKeys &&
+          !avoidKeys.includes(key) &&
+          !this.isEmpty(targetObject[key]) &&
+          this.typeof(targetObject[key]) !== "object"
+        ) {
+          return true;
+        }
+        return false;
+      };
+      for (let key in targetObject) {
+        if (validateKey(key)) {
+          log.targetKeyExtracted = extractKey !== null ? true : false;
+          path = { ...path, [key]: targetObject[key] };
+          continue;
+        } else if (validateImmersion(targetObject, key)) {
+          if (!path.hasOwnProperty(immerseKey)) {
+            path[key] = {};
+          }
+          path[key][immerseKey] = targetObject[key];
+        } else if (this.typeof(targetObject[key]) === "object") {
+          if (!path.hasOwnProperty(key)) {
+            path[key] = {};
+          }
+          path[key] = submerge(targetObject[key], path[key]);
+        }
       }
-      return result;
-    } else {
-      return { priority: targetValue };
+      log.withinTargetKey = false;
+      return this.deleteEmptyKeys(path);
+    };
+
+    for (let key in targetObject) {
+      if (this.typeof(targetObject[key]) === "object") {
+        if (extractKey && extractKey !== key) continue;
+
+        let path = { [key]: {} };
+        log.withinTargetKey = extractKey === key ? true : false;
+        let discovered = submerge(targetObject[key], path[key]);
+        if (discovered) {
+          if (log.targetKeyExtracted) {
+            return discovered;
+          }
+          path[key] = discovered;
+          log.paths = { ...log.paths, ...path };
+        }
+      } else if (
+        !extractKey &&
+        extractSubKeys &&
+        extractSubKeys.includes(key)
+      ) {
+        log.paths[key] = targetObject[key];
+      } else if (extractKey && extractKey === key) {
+        return targetObject[key];
+      } else if (immerseKey && avoidKeys && !avoidKeys.includes(key)) {
+        log.paths[key] = {};
+        log.paths[key][immerseKey] = targetObject[key];
+      }
     }
+    return Object.keys(log.paths).length > 0 ? log.paths : null;
+  }
+
+  deleteEmptyKeys(targetObject) {
+    if (this.typeof(targetObject) !== "object") return null;
+
+    let result = { ...targetObject };
+    for (let key in result) {
+      if (this.isEmpty(result[key])) {
+        delete result[key];
+      }
+    }
+    if (this.isEmpty(result)) {
+      return null;
+    } else {
+      return result;
+    }
+  }
+
+  isEmpty(target) {
+    const isEmptyObject = (object) => {
+      for (let key in object) {
+        let type = this.typeof(object[key]);
+        if (type === "object") {
+          if (Object.keys(object[key]).length === 0) {
+            continue;
+          }
+          if (!isEmptyObject(object[key])) {
+            return false;
+          }
+        } else if (["array", "string", "boolean", "number"].includes(type)) {
+          if (!this.isEmpty(object[key])) {
+            return false;
+          }
+        } else if (object[key] === null || object[key] === undefined) {
+          continue;
+        }
+      }
+      return true;
+    };
+
+    let type = this.typeof(target);
+    switch (type) {
+      case "string":
+        return target.length === 0;
+      case "array":
+        return target.filter((el) => !this.isEmpty(el)).length === 0;
+      case "object":
+        return isEmptyObject(target);
+      case "undefined":
+      case "null":
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  hasNestedProperty(object, props, key = true) {
+    if (this.typeof(object) !== "object") return null;
+    props = Array.isArray(props) ? props : [props];
+
+    if (key) {
+      for (let key in object) {
+        if (props.includes(key)) {
+          return true;
+        } else if (this.typeof(object[key]) === "object") {
+          if (this.hasNestedProperty(object[key], props)) {
+            return true;
+          }
+        }
+      }
+    } else {
+      for (let key in object) {
+        if (props.includes(object[key])) {
+          return true;
+        } else if (this.typeof(object[key]) === "object") {
+          if (this.hasNestedProperty(object[key], props, false)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   getNestedProperty(targetObject, propName) {
     let propNameArr = propName.split(".");
     if (propNameArr.length === 1) {
-      return targetObject[propName];
+      return targetObject[propName] ? targetObject[propName] : null;
     }
     return propNameArr.reduce((obj, prop) => {
       return obj && obj[prop] ? obj[prop] : null;
     }, targetObject);
   }
+
   setNestedProperty(targetObject, propName, setValue) {
     let propNameArr = propName.split(".");
     let lastProp = propNameArr.pop();
@@ -272,7 +396,25 @@ export class Util {
     return targetObject;
   }
 
-  findAvailableDaysOff(employee) {
-    console.log(employee);
+  rotateArr(arr, options = {}) {
+    options.amount = options.amount ? Math.max(0, options.amount) : 1;
+    options.left = options.left !== undefined ? options.left : true;
+    options.element = options.element ? options.element : null;
+    let result = [...arr];
+
+    if (!options.element) {
+      let i = options.amount;
+      while (i !== 0) {
+        options.left
+          ? result.push(result.shift())
+          : result.unshift(result.pop());
+        i--;
+      }
+    } else if (result.includes(options.element)) {
+      while (result[0] !== options.element) {
+        result.unshift(result.pop());
+      }
+    }
+    return result;
   }
 }
